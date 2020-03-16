@@ -56,6 +56,22 @@ class _spymDataArray:
         from spym.process.level import align
         self._dr.data, self._bkg = align(self._dr.data.astype(float), **kwargs)
 
+    def destripe(self, **kwargs):
+        ''' Find and remove scan stripes by averaging neighbourhood lines
+
+        Args:
+            min_lenght: only scars that are as long or longer than this value (in pixels) will be marked
+            hard_threshold: the minimum difference of the value from the neighbouring upper and lower lines to be considered a defect.
+            soft_threshold: values differing at least this much do not form defects themselves, but they are attached to defects obtained from the hard threshold if they touch one.
+            only_mask: wheter returning just the mask in spym.mask (True) or also the corrected data (False, default).
+        '''
+
+        if not self._dr.data.ndim == 2:
+            print("The DataArray is not an image. Abort.")
+            return
+        from spym.process.filters import destripe
+        self._dr.data, self._mask = destripe(self._dr.data.astype(float), **kwargs)
+
 @xr.register_dataset_accessor("spym")
 class _spymDataset:
     '''spym class extending xarray Dataset
