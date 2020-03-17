@@ -13,11 +13,11 @@ def fixzero(image,
     '''
     
     if to_mean:
-        image -= image.mean()
+        fixed = image - image.mean()
     else:
-        image -= image.min()
+        fixed = image - image.min()
 
-    return image
+    return fixed
 
 def plane(image):
     '''Corrects for image tilting by subtraction of a plane.
@@ -36,11 +36,11 @@ def plane(image):
     bkg_yy = np.apply_along_axis(_fill, 0, image, bkg_y)
 
     bkg = bkg_xx + bkg_yy
-    image -= bkg
+    planned = image - bkg
 
-    return image, bkg
+    return planned, bkg
 
-def align(image, baseline='mean', axis=1, poly_degree=2):
+def align(image, baseline='median', axis=1, poly_degree=2):
     '''Align rows.
 
     Args:
@@ -60,9 +60,9 @@ def align(image, baseline='mean', axis=1, poly_degree=2):
     elif baseline == 'poly':
         bkg = np.apply_along_axis(_poly_bkg, axis, image, poly_degree)
 
-    image -= bkg
+    aligned = image - bkg
 
-    return image, bkg
+    return aligned, bkg
 
 def _mean_bkg(line):
     return np.full(line.shape[0], line.mean())
