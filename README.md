@@ -1,3 +1,3 @@
 # spym
 
-A python package for processing Scanning Probe Microscopy (SPM) data.
+A Python package and xarray accessor for processing Scanning Probe Microscopy (SPM) data.

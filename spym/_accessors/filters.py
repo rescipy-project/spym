@@ -8,64 +8,44 @@ class SpymFilters():
     def __init__(self, spym_instance):
         self._spym = spym_instance
 
-    def gauss(self, in_place=True, **kwargs):
+    def gauss(self, **kwargs):
         ''' Apply Gaussian smoothing filter.
 
         Args:
             size: size of the filter in pixels.
-            in_place: if True the function is applied to the DataArray (default),
-                if False a new DataArray is returned.
         '''
 
-        if in_place:
-            self._spym._dr.data = spym_filters.gauss(self._spym._dr.data, **kwargs)
-        else:
-            return self._spym._dr.copy(deep=True, data=spym_filters.gauss(self._spym._dr.data, **kwargs))
+        self._spym._dr.data = spym_filters.gauss(self._spym._dr.data, **kwargs)
 
-    def median(self, in_place=True, **kwargs):
+    def median(self, **kwargs):
         ''' Apply median smoothing filter.
 
         Args:
             size: size of the filter in pixels.
-            in_place: if True the function is applied to the DataArray (default),
-                if False a new DataArray is returned.
         '''
 
-        if in_place:
-            self._spym._dr.data = spym_filters.median(self._spym._dr.data, **kwargs)
-        else:
-            return self._spym._dr.copy(deep=True, data=spym_filters.median(self._spym._dr.data, **kwargs))
+        self._spym._dr.data = spym_filters.median(self._spym._dr.data, **kwargs)
 
-    def mean(self, in_place=True, **kwargs):
+    def mean(self, **kwargs):
         ''' Apply mean smoothing filter.
 
         Args:
             size: size of the filter in pixels.
-            in_place: if True the function is applied to the DataArray (default),
-                if False a new DataArray is returned.
         '''
 
-        if in_place:
-            self._spym._dr.data = spym_filters.mean(self._spym._dr.data, **kwargs)
-        else:
-            return self._spym._dr.copy(deep=True, data=spym_filters.mean(self._spym._dr.data, **kwargs))
+        self._spym._dr.data = spym_filters.mean(self._spym._dr.data, **kwargs)
 
-    def sharpen(self, in_place=True, **kwargs):
+    def sharpen(self, **kwargs):
         ''' Apply a sharpening filter.
 
         Args:
             size: size of the filter in pixels.
             alpha: weight.
-            in_place: if True the function is applied to the DataArray (default),
-                if False a new DataArray is returned.
         '''
 
-        if in_place:
-            self._spym._dr.data = spym_filters.sharpen(self._spym._dr.data, **kwargs)
-        else:
-            return self._spym._dr.copy(deep=True, data=spym_filters.sharpen(self._spym._dr.data, **kwargs))
+        self._spym._dr.data = spym_filters.sharpen(self._spym._dr.data, **kwargs)
 
-    def destripe(self, in_place=True, **kwargs):
+    def destripe(self, **kwargs):
         ''' Find and remove scan stripes by averaging neighbourhood lines.
 
         Args:
@@ -74,15 +54,10 @@ class SpymFilters():
             soft_threshold: values differing at least this much do not form defects themselves,
                 but they are attached to defects obtained from the hard threshold if they touch one.
             only_mask: wheter returning just the mask (True) or also the corrected data (False, default).
-            in_place: if True the function is applied to the DataArray (default),
-                if False a new DataArray is returned.
         '''
 
         if not self._spym._dr.data.ndim == 2:
             print("The DataArray is not an image. Abort.")
             return
 
-        if in_place:
-            self._spym._dr.data, self._spym._mask = spym_filters.destripe(self._spym._dr.data.astype(float), **kwargs)
-        else:
-            return self._spym._dr.copy(deep=True, data=spym_filters.destripe(self._spym._dr.data.astype(float), **kwargs)[0])
+        self._spym._dr.data, self._spym._mask = spym_filters.destripe(self._spym._dr.data.astype(float), **kwargs)
