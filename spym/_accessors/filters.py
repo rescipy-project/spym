@@ -46,14 +46,20 @@ class SpymFilters():
         self._spym._dr.data = spym_filters.sharpen(self._spym._dr.data, **kwargs)
 
     def destripe(self, **kwargs):
-        ''' Find and remove scan stripes by averaging neighbourhood lines.
+        '''' Find and remove scan stripes by averaging neighbourhood lines
 
         Args:
-            min_lenght: only scars that are as long or longer than this value (in pixels) will be marked.
-            hard_threshold: the minimum difference of the value from the neighbouring upper and lower lines to be considered a defect.
+            min_length: only scars that are as long or longer than this value (in pixels) will be marked
+            hard_threshold: the minimum difference of the value from the neighbouring upper and lower lines
+                to be considered a defect.
             soft_threshold: values differing at least this much do not form defects themselves,
                 but they are attached to defects obtained from the hard threshold if they touch one.
-            only_mask: wheter returning just the mask (True) or also the corrected data (False, default).
+            sign: whether mark stripes with positive values, negative values or both.
+            rel_threshold: the minimum difference of the value from the neighbouring upper and
+                lower lines to be considered a defect (in physical values). Overwrite hard_threshold.
+
+        Returns:
+            destriped 2d array
         '''
 
         if not self._spym._dr.data.ndim == 2:

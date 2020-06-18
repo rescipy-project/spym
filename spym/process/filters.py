@@ -66,54 +66,73 @@ def sharpen(image,
     return sharpened
 
 def destripe(image,
-             min_lenght=20,
+             min_length = 20,
              hard_threshold = 0.4,
              soft_threshold = 0.2,
-             only_mask=False):
+             sign = 'positive',
+             rel_threshold = None):
     ''' Find and remove scan stripes by averaging neighbourhood lines
 
     Args:
         image: 2d numpy array
-        min_lenght: only scars that are as long or longer than this value (in pixels) will be marked
-        hard_threshold: the minimum difference of the value from the neighbouring upper and lower lines to be considered a defect.
+        min_length: only scars that are as long or longer than this value (in pixels) will be marked
+        hard_threshold: the minimum difference of the value from the neighbouring upper and lower lines
+            to be considered a defect.
         soft_threshold: values differing at least this much do not form defects themselves,
-        but they are attached to defects obtained from the hard threshold if they touch one.
-        only_mask: wheter returning just the mask (True) or also the corrected data (False, default).
+            but they are attached to defects obtained from the hard threshold if they touch one.
+        sign: whether mark stripes with positive values, negative values or both.
+        rel_threshold: the minimum difference of the value from the neighbouring upper and
+            lower lines to be considered a defect (in physical values). Overwrite hard_threshold.
 
     Returns:
         destriped 2d array
     '''
 
-    # Calculate line differences
-    d1 = np.diff(image, axis=0)
-    diff1 = np.empty(image.shape)
-    diff1[-1] = d1[-1]
-    diff1[:-1] = d1
+    # Normalize image
+    rng = (image.max() - image.min()) / 2
+    n_image = (image - image.mean())/rng
 
-    d2 = np.diff(diff1, axis=0)
-    diff2 = np.empty(image.shape)
-    diff2[0] = d2[0]
-    diff2[1:] = d2
+    # Calculate positive line differences
+    d_pos = np.diff(n_image.clip(0, None), axis=0)
+    np.clip(d_pos, 0, None, out=d_pos)
+    diff_pos = np.empty(image.shape)
+    diff_pos[0] = d_pos[0]
+    diff_pos[1:] = d_pos
 
-    # Normalize line differences
-    diff = -2*(diff2 - diff2.mean())/(diff2.max()-diff2.min())
+    # Calculate negative line differences
+    d_neg = np.diff(n_image.clip(None, 0), axis=0)
+    np.clip(d_neg, None, 0, out=d_neg)
+    diff_neg = np.empty(image.shape)
+    diff_neg[0] = d_neg[0]
+    diff_neg[1:] = d_neg
+    
+    # Calculate physical threshold
+    if rel_threshold:
+        hard_threshold = rel_threshold*rng
 
     # Calculate masks for hard and soft thresholds
-    m_hard = abs(diff) > hard_threshold
-    m_soft = abs(diff) > soft_threshold
+    m_hard_pos = False
+    m_soft_pos = False
+    m_hard_neg = False
+    m_soft_neg = False
+    if sign in ['positive', 'both']:
+        m_hard_pos = diff_pos > hard_threshold
+        m_soft_pos = diff_pos > soft_threshold
+    if sign in ['negative', 'both']:
+        m_hard_neg = diff_neg < -hard_threshold
+        m_soft_neg = diff_neg < -soft_threshold
 
     # Opening (erosion+dilation) of the masks
-    m_hard = ndimage.binary_opening(m_hard, structure=np.ones((1,min_lenght), dtype=bool))
-    m_soft = ndimage.binary_opening(m_soft, structure=np.ones((1,3*min_lenght), dtype=bool))
+    m_hard = ndimage.binary_opening(m_hard_pos+m_hard_neg, structure=np.ones((1,min_length), dtype=bool))
+    m_soft = ndimage.binary_opening(m_soft_pos+m_soft_neg, structure=np.ones((1,2*min_length), dtype=bool))
 
     # Addition of hard and soft mask
-    mask = ndimage.binary_opening(m_soft+m_hard, structure=np.ones((1,min_lenght), dtype=bool))
+    mask = ndimage.binary_opening(m_soft+m_hard, structure=np.ones((1,min_length), dtype=bool))
 
     # Filter masked values
     image_masked = np.ma.array(image, mask = mask, fill_value=np.NaN)
     filt = ndimage.uniform_filter(image_masked.data, size=(3, 1))
 
-    if not only_mask:
-        filtered = image*np.invert(mask) + filt*mask
+    filtered = image*np.invert(mask) + filt*mask
 
     return filtered, mask
