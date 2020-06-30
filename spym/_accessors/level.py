@@ -32,7 +32,7 @@ class SpymLevel():
         '''Align rows.
         
         Args:
-            baseline: defines how baselines are estimated; 'median' (default), 'mean', 'poly'.
+            baseline: defines how baselines are estimated; 'mean' (default), 'median', 'poly'.
             axis: axis along wich calculate the baselines.
             poly_degree: polnomial degree if baseline='poly'.
         '''
