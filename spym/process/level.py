@@ -40,12 +40,12 @@ def plane(image):
 
     return planned, bkg
 
-def align(image, baseline='median', axis=1, poly_degree=2):
+def align(image, baseline='mean', axis=1, poly_degree=2):
     '''Align rows.
 
     Args:
         image: 2d numpy array.
-        baseline: defines how baselines are estimated; 'median' (default), 'mean', 'poly'.
+        baseline: defines how baselines are estimated; 'mean' (default), 'median', 'poly'.
         axis: axis along wich calculate the baselines.
         poly_degree: polnomial degree if baseline='poly'.
 
