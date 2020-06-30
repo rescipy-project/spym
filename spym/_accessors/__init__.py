@@ -3,6 +3,7 @@ import numpy as np
 
 from .filters import SpymFilters
 from .level import SpymLevel
+from .plotting import SpymPlotting
 
 @xr.register_dataarray_accessor("spym")
 class _SpymDataArray:
@@ -18,12 +19,14 @@ class _SpymDataArray:
         # Initialize spym classes
         self.level = SpymLevel(self)
         self.filters = SpymFilters(self)
+        self.plotting = SpymPlotting(self)
 
         # Expose some useful methods
         self.fixzero = self.level.fixzero
         self.plane = self.level.plane
         self.align = self.level.align
         self.destripe = self.filters.destripe
+        self.plot = self.plotting.plot
 
     @property
     def background(self):
