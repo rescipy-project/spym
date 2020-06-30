@@ -46,7 +46,7 @@ class SpymFilters():
         self._spym._dr.data = spym_filters.sharpen(self._spym._dr.data, **kwargs)
 
     def destripe(self, **kwargs):
-        '''' Find and remove scan stripes by averaging neighbourhood lines
+        ''' Find and remove scan stripes by averaging neighbourhood lines
 
         Args:
             min_length: only scars that are as long or longer than this value (in pixels) will be marked
