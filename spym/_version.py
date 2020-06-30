@@ -4,4 +4,4 @@ The variable is manually increased,
 committed and pushed when a version bump is required.
 """
 
-__version__ = "0.0.2"
+__version__ = "0.1.0"
