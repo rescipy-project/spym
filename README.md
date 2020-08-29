@@ -2,8 +2,4 @@
 
 A Python package and xarray accessor for processing Scanning Probe Microscopy (SPM) data.
 
-
-Documentation
--------------
-
-Documentation for spym can be found `here <https://spym-docs.readthedocs.io/en/latest/>`_.
+See the [documentation](https://spym-docs.readthedocs.io/en/latest/) for detailed information on installation and usage of ``spym``.
