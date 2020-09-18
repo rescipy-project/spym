@@ -17,32 +17,43 @@ def load(filename, scaling=True):
 
     '''
 
-    if filename.endswith(".nx") or filename.endswith(".nxs"):
+    if filename.endswith(".nx") or filename.endswith(".NX") or filename.endswith(".nxs") or filename.endswith(".NXS"):
         try:
             import nxarray
+        except ImportError:
+            print("Error: nxarray package is needed to open .nx/.nxs files.")
+            return None
+        try:
             ds = nxarray.load(filename)
         except:
-            print("Error: nxarray package is needed to open .nx/.nxs files.")
-            ds = None
+            print("Error: the file does not appear to be valid.")
+            return None
 
-    if filename.endswith(".par"):
+    if filename.endswith(".par") or filename.endswith(".PAR"):
         try:
             import omicronscala
+        except ImportError:
+            print("Error: omicronscala package is needed to open .par files.")
+            return None
+        try:
             ds = omicronscala.to_dataset(filename, scaling=scaling)
         except:
-            print("Error: omicronscala package is needed to open .par files.")
-            ds = None
+            print("Error: the file does not appear to be valid.")
+            return None
 
-    if filename.endswith(".sm4"):
+    if filename.endswith(".sm4") or filename.endswith(".SM4"):
         try:
             import rhksm4
-            ds = rhksm4.to_dataset(filename, scaling=scaling)
-        except:
+        except ImportError:
             print("Error: rhksm4 package is needed to open .sm4 files.")
             ds = None
+        try:
+            ds = rhksm4.to_dataset(filename, scaling=scaling)
+        except:
+            print("Error: the file does not appear to be valid.")
+            return None
 
-    if ds is not None:
-        for dr in ds:
-            ds[dr].attrs["filename"] = os.path.basename(filename)
+    for dr in ds:
+        ds[dr].attrs["filename"] = os.path.basename(filename)
 
     return ds
