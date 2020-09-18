@@ -2,7 +2,7 @@
 Installation
 ============
 
-You can install spym with pip:
+You can install spym in your system through pip:
 
 .. code-block:: bash
 
@@ -20,7 +20,13 @@ You can install spym with pip:
 Prerequisites
 =============
 
-To use spym fucntions on numpy arrays no dependencies are needed except the numpy package.
-On the other hand, spym extends and is best integrated with the xarray package:
+Spym extends and is best integrated with the xarray package, so it is highly recommended to install it:
 
 * `xarray <http://xarray.pydata.org>`_
+
+Nevertheless, many spym functions can be used directly on numpy arrays (see the Usage section for more information).
+In the case you need to load data from some proprietary format through the `spym.load()` function, the following packages are also needed:
+
+* `rhksm4 <https://gitlab.com/rhksm4/rhksm4>`_
+
+* `omicronscala <https://gitlab.com/mpanighel/omicronscala>`_

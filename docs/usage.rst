@@ -16,16 +16,59 @@ Now the ``spym`` accessor will be available to xarray objects, e.g.:
     dr = xarray.DataArray()
     dr.spym.plane()
 
+Many of the ``spym`` functions are also applicable directly to numpy arrays:
 
-The documentation of each ``spym`` method can be accessed with:
+.. code-block:: python
+    
+    from spym.level import align
+    
+    aligned, background = align(my_array, baseline='median')
+    
+
+The documentation of each ``spym`` method can be accessed with the ``?`` syntax:
 
 .. code-block:: python
     
     dr.spym.plane?
 
+See the API Reference section for a list of all the methods available.
 
-.. 
-    Examples
-    ========
 
-    Let's start by importing:
+Examples
+========
+
+The spym package is best integrated with xarray objects. Here is a typical usage for scanning tunneling microscopy data loaded into an xarray Dataset:
+
+.. code-block:: python
+    
+    # Import the package
+    import spym
+    
+    # Load the file and show the content
+    f = spym.load("/path/to/a/supported/file")
+    f
+    
+    # Select the channel of interest (e.g. Topography_Forward) and show its content
+    tf = f.Topography_Forward
+    tf
+    
+    # Align the rows
+    tf.spym.align()
+    
+    # Make plane on the image
+    tf.spym.plane()
+    
+    # Fix the minimum to zero
+    tf.spym.fixzero()
+    
+    # Plot the image
+    tf.spym.plot()
+
+
+Supported file formats
+======================
+
+The low-level ``spym`` functions can be applied to any numpy array and the accessor methods can be used with any xarray DataArray.
+Beside loading and saving in NeXus/HDF5 file format natively, ``spym`` also provides direct imports (through the ``spym.load()`` function) for some proprietary file formats, at present:
+* RHK R9/R9plus *.sm4 (``rhksm4`` package is needed)
+* Omicron Scala *.par (``omicronscala`` package is needed)

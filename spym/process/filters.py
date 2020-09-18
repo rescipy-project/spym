@@ -3,14 +3,15 @@ from scipy import ndimage
 
 def gauss(image, 
           size=3):
-    ''' Apply Gaussian smoothing filter
+    ''' Apply Gaussian smoothing filter.
 
     Args:
-        image: numpy array
-        size: size of the filter in pixels
-    
+        image: numpy array.
+        size: size of the filter in pixels.
+
     Returns:
-        filtered numpy array
+        filtered numpy array.
+
     '''
 
     sigma = size * 0.42466
@@ -19,28 +20,30 @@ def gauss(image,
 
 def median(image,
            size=3):
-    ''' Apply median smoothing filter
+    ''' Apply median smoothing filter.
 
     Args:
-        image: numpy array
-        size: size of the filter in pixels
-    
+        image: numpy array.
+        size: size of the filter in pixels.
+
     Returns:
-        filtered numpy array
+        filtered numpy array.
+
     '''
 
     return ndimage.filters.median_filter(image, size=size)
 
 def mean(image,
          size=3):
-    ''' Apply mean smoothing filter
+    ''' Apply mean smoothing filter.
 
     Args:
-        image: numpy array
-        size: size of the filter in pixels
-    
+        image: numpy array.
+        size: size of the filter in pixels.
+
     Returns:
-        filtered numpy array
+        filtered numpy array.
+
     '''
 
     return ndimage.filters.uniform_filter(image, size=size)
@@ -48,15 +51,16 @@ def mean(image,
 def sharpen(image,
             size=3,
             alpha=30):
-    ''' Apply a sharpening filter
+    ''' Apply a sharpening filter.
 
     Args:
-        image: numpy array
-        size: size of the filter in pixels
-        alpha: weight
-    
+        image: numpy array.
+        size: size of the filter in pixels.
+        alpha: weight.
+
     Returns:
-        filtered numpy array
+        filtered numpy array.
+
     '''
 
     blurred = ndimage.gaussian_filter(image, size)
@@ -71,21 +75,19 @@ def destripe(image,
              soft_threshold = 0.2,
              sign = 'positive',
              rel_threshold = None):
-    ''' Find and remove scan stripes by averaging neighbourhood lines
+    ''' Find and remove scan stripes by averaging neighbourhood lines.
 
     Args:
-        image: 2d numpy array
-        min_length: only scars that are as long or longer than this value (in pixels) will be marked
-        hard_threshold: the minimum difference of the value from the neighbouring upper and lower lines
-            to be considered a defect.
-        soft_threshold: values differing at least this much do not form defects themselves,
-            but they are attached to defects obtained from the hard threshold if they touch one.
+        image: 2d numpy array.
+        min_length: only scars that are as long or longer than this value (in pixels) will be marked.
+        hard_threshold: the minimum difference of the value from the neighbouring upper and lower lines to be considered a defect.
+        soft_threshold: values differing at least this much do not form defects themselves, but they are attached to defects obtained from the hard threshold if they touch one.
         sign: whether mark stripes with positive values, negative values or both.
-        rel_threshold: the minimum difference of the value from the neighbouring upper and
-            lower lines to be considered a defect (in physical values). Overwrite hard_threshold.
+        rel_threshold: the minimum difference of the value from the neighbouring upper and lower lines to be considered a defect (in physical values). Overwrite hard_threshold.
 
     Returns:
-        destriped 2d array
+        destriped 2d array.
+
     '''
 
     # Normalize image

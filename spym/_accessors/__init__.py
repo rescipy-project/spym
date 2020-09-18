@@ -8,6 +8,7 @@ from .plotting import SpymPlotting
 @xr.register_dataarray_accessor("spym")
 class _SpymDataArray:
     '''spym class extending xarray DataArray
+
     '''
 
     def __init__(self, xarray_dr):
@@ -31,18 +32,21 @@ class _SpymDataArray:
     @property
     def background(self):
         ''' Background.
+
         '''
         return self._bkg
 
     @property
     def mask(self):
         ''' Mask.
+
         '''
         return self._mask
 
 @xr.register_dataset_accessor("spym")
 class _SpymDataset:
     '''spym class extending xarray Dataset
+
     '''
 
     def __init__(self, xarray_ds):

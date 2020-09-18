@@ -2,7 +2,7 @@ import numpy as np
 
 def fixzero(image,
             to_mean=False):
-    ''' Add a constant to all the data to move the minimum (or the mean value) to zero
+    ''' Add a constant to all the data to move the minimum (or the mean value) to zero.
 
     Args:
         image: numpy array.
@@ -10,6 +10,7 @@ def fixzero(image,
 
     Returns:
         numpy array.
+
     '''
     
     if to_mean:
@@ -27,6 +28,7 @@ def plane(image):
 
     Returns:
         flattened image as 2d numpy array.
+
     '''
 
     bkg_x = _poly_bkg(image.mean(axis=0), 1)
@@ -51,6 +53,7 @@ def align(image, baseline='mean', axis=1, poly_degree=2):
 
     Returns:
         corrected 2d numpy array.
+
     '''
 
     if baseline == 'mean':

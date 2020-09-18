@@ -10,11 +10,11 @@ class SpymPlotting():
 
     def plot(self, title=None, **kwargs):
         ''' Plot data with custom parameters.
-        
+
         Args:
-            title: title of the figure (string). By default gives some basic information
-                on the data plotted. Pass an empty string to disable it.
+            title: title of the figure (string). By default gives some basic information on the data plotted. Pass an empty string to disable it.
             **kwargs: any argument accepted by xarray.plot() function.
+
         '''
 
         dr = self._spym._dr
@@ -47,7 +47,7 @@ class SpymPlotting():
 
     def format_title(self):
         ''' Provide a title from the metadata of the DataArray.
-        
+
         '''
 
         title = ""
@@ -66,14 +66,15 @@ class SpymPlotting():
 
     def fit_figure_to_image(self, figure, image, axis=None):
         ''' Calculate figure size so that plot (matplotlib axis) pixel size is equal to the image size.
-        
+
         Args:
-            figure: matplotlib Figure instance
-            image: 2d numpy array
-            axis: axis of the figure to adapt, if None takes the first (or only) axis
-        
+            figure: matplotlib Figure instance.
+            image: 2d numpy array.
+            axis: axis of the figure to adapt, if None takes the first (or only) axis.
+
         Returns:
-            adapted width and height of the figure in inches
+            adapted width and height of the figure in inches.
+
         '''
 
         if axis is None:

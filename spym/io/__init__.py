@@ -2,19 +2,19 @@ import os
 
 def load(filename, scaling=True):
     ''' Import data from common SPM file formats.
-    
+
     Currently supported file formats are:
-        * NeXus (.nx, .nxs)
-        * RHK (.sm4)
-        * Omicron (.par)
-    
+        * NeXus (.nx, .nxs). Package nxarray is needed.
+        * RHK (.sm4). Package rhksm4 is needed.
+        * Omicron Scala (.par). Package omicronscala is needed.
+
     Args:
-        filename: path to the SPM file
-        scaling: if True convert data to physical units (default),
-            if False keep raw data
-    
+        filename: path to the SPM file.
+        scaling: if True convert data to physical units (default), if False keep raw data.
+
     Returns:
         xarray Dataset with data and metadata.
+
     '''
 
     if filename.endswith(".nx") or filename.endswith(".nxs"):
