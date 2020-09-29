@@ -68,7 +68,10 @@ The spym package is best integrated with xarray objects. Here is a typical usage
 Supported file formats
 ======================
 
-The low-level ``spym`` functions can be applied to any numpy array and the accessor methods can be used with any xarray DataArray.
-Beside loading and saving in NeXus/HDF5 file format natively, ``spym`` also provides direct imports (through the ``spym.load()`` function) for some proprietary file formats, at present:
+The ``spym`` package provides direct imports through the ``spym.load()`` function for a few file formats, at present:
+
+* NeXus/HDF5 *.nxs (``nxarray`` package is needed)
+
 * RHK R9/R9plus *.sm4 (``rhksm4`` package is needed)
+
 * Omicron Scala *.par (``omicronscala`` package is needed)

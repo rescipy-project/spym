@@ -43,7 +43,7 @@ class SpymPlotting():
             # Apply colormap
             plot.set_cmap('afmhot')
 
-        plt.draw()
+        plt.plot()
 
     def format_title(self):
         ''' Provide a title from the metadata of the DataArray.

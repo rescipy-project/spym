@@ -20,12 +20,12 @@ You can install spym in your system through pip:
 Prerequisites
 =============
 
-Spym extends and is best integrated with the xarray package, so it is highly recommended to install it:
-
-* `xarray <http://xarray.pydata.org>`_
+Spym extends and is best integrated with the `xarray <http://xarray.pydata.org>`_ package, which is required for the installation.
 
 Nevertheless, many spym functions can be used directly on numpy arrays (see the Usage section for more information).
-In the case you need to load data from some proprietary format through the `spym.load()` function, the following packages are also needed:
+In the case you need to load data  through the `spym.load()` function from NeXus/HDF5 files or some supported proprietary formats, the following packages could be needed (see the Usage section for more information):
+
+* `nxarray <https://github.com/nxarray/nxarray>`_
 
 * `rhksm4 <https://gitlab.com/rhksm4/rhksm4>`_
 
