@@ -18,22 +18,16 @@ class SpymPlotting():
         '''
 
         dr = self._spym._dr
+        attrs = dr.attrs
 
-        # Create figure
-        # xarray plot() wraps:
-        #   - matplotlib.pyplot.plot() for 1d arrays
-        #   - matplotlib.pyplot.pcolormesh() for 2d arrays
-        #   - matplotlib.pyplot.hist() for anything else
-        plot = dr.plot()
+        # Set plot properties
+        if attrs['rank'] == 1:
+            # plot wraps matplotlib.pyplot.plot()
+            plot = dr.plot.line(hue="y")
 
-        # Set figure title
-        if title is None:
-            title = self.format_title()
-        plt.title(title)
-
-        # Set images properties (2d arrays)
-        # plot is an instance of matplotlib.collections.QuadMesh
-        if dr.data.ndim == 2 and not isinstance(plot, list):
+        elif attrs['rank'] == 2:
+            # plot is an instance of matplotlib.collections.QuadMesh
+            plot = dr.plot()
             fig = plot.get_figure()
             ax = plot.axes
             # Fit figure pixel size to image
@@ -42,6 +36,19 @@ class SpymPlotting():
 
             # Apply colormap
             plot.set_cmap('afmhot')
+
+        else:
+            # Create figure
+            # xarray plot() wraps:
+            #   - matplotlib.pyplot.plot() for 1d arrays
+            #   - matplotlib.pyplot.pcolormesh() for 2d arrays
+            #   - matplotlib.pyplot.hist() for anything else
+            plot = dr.plot()
+
+        # Set figure title
+        if title is None:
+            title = self.format_title()
+        plt.title(title)
 
         plt.plot()
 
