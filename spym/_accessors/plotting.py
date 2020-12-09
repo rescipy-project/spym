@@ -20,6 +20,9 @@ class SpymPlotting():
         dr = self._spym._dr
         attrs = dr.attrs
 
+        # Clear plt
+        plt.clf()
+
         # Set plot properties
         if attrs['rank'] == 1:
             # plot wraps matplotlib.pyplot.plot()
@@ -51,6 +54,8 @@ class SpymPlotting():
         plt.title(title)
 
         plt.plot()
+
+        return plot
 
     def format_title(self):
         ''' Provide a title from the metadata of the DataArray.
