@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import hvplot.xarray
 
 class SpymPlotting():
     ''' Plotting.
@@ -9,7 +10,7 @@ class SpymPlotting():
         self._spym = spym_instance
 
     def plot(self, title=None, **kwargs):
-        ''' Plot data with custom parameters.
+        ''' Plot data with custom parameters using matplotlib.
 
         Args:
             title: title of the figure (string). By default gives some basic information on the data plotted. Pass an empty string to disable it.
@@ -26,15 +27,15 @@ class SpymPlotting():
         # Set plot properties
         if attrs['rank'] == 1:
             # plot wraps matplotlib.pyplot.plot()
-            plot = dr.plot.line(hue="y")
+            plot = dr.plot.line(hue="y", **kwargs)
 
         elif attrs['rank'] == 2:
             # plot is an instance of matplotlib.collections.QuadMesh
-            plot = dr.plot()
+            plot = dr.plot.pcolormesh(**kwargs)
             fig = plot.get_figure()
             ax = plot.axes
             # Fit figure pixel size to image
-            fig_width, fig_height = self.fit_figure_to_image(fig, dr.data, ax)
+            fig_width, fig_height = self._fit_figure_to_image(fig, dr.data, ax)
             fig.set_size_inches(fig_width, fig_height)
 
             # Apply colormap
@@ -46,18 +47,50 @@ class SpymPlotting():
             #   - matplotlib.pyplot.plot() for 1d arrays
             #   - matplotlib.pyplot.pcolormesh() for 2d arrays
             #   - matplotlib.pyplot.hist() for anything else
-            plot = dr.plot()
+            plot = dr.plot(**kwargs)
 
         # Set figure title
         if title is None:
-            title = self.format_title()
+            title = self._format_title()
         plt.title(title)
 
         plt.plot()
 
         return plot
 
-    def format_title(self):
+    def hvplot(self, title=None, **kwargs):
+        ''' Plot data with custom parameters using hvplot.
+
+        Args:
+            title: title of the figure (string). By default gives some basic information on the data plotted. Pass an empty string to disable it.
+            **kwargs: any argument accepted by hvplot() function.
+
+        '''
+
+        dr = self._spym._dr
+        attrs = dr.attrs
+
+        # Set figure title
+        if title is None:
+            title = self._format_title()
+
+        # Set hvplot properties
+        if attrs['rank'] == 1:
+            hvplot = dr.hvplot(**kwargs).opts(title=title)
+
+        elif attrs['rank'] == 2:
+            hvplot = dr.hvplot(**kwargs).opts(title=title,
+                                              cmap='afmhot',
+                                              frame_width=512,
+                                              frame_height=512,
+                                              data_aspect=1)
+
+        else:
+            hvplot = dr.hvplot(**kwargs).opts(title=title)
+
+        return hvplot
+
+    def _format_title(self):
         ''' Provide a title from the metadata of the DataArray.
 
         '''
@@ -76,7 +109,7 @@ class SpymPlotting():
 
         return title
 
-    def fit_figure_to_image(self, figure, image, axis=None):
+    def _fit_figure_to_image(self, figure, image, axis=None):
         ''' Calculate figure size so that plot (matplotlib axis) pixel size is equal to the image size.
 
         Args:

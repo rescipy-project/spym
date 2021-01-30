@@ -28,6 +28,7 @@ class _SpymDataArray:
         self.align = self.level.align
         self.destripe = self.filters.destripe
         self.plot = self.plotting.plot
+        self.hvplot = self.plotting.hvplot
 
     @property
     def background(self):
