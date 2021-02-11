@@ -25,11 +25,11 @@ class SpymPlotting():
         plt.clf()
 
         # Set plot properties
-        if attrs['rank'] == 1:
+        if attrs['interpretation'] == 'spectrum':
             # plot wraps matplotlib.pyplot.plot()
             plot = dr.plot.line(hue="y", **kwargs)
 
-        elif attrs['rank'] == 2:
+        elif attrs['interpretation'] == 'image':
             # plot is an instance of matplotlib.collections.QuadMesh
             plot = dr.plot.pcolormesh(**kwargs)
             fig = plot.get_figure()
@@ -75,10 +75,10 @@ class SpymPlotting():
             title = self._format_title()
 
         # Set hvplot properties
-        if attrs['rank'] == 1:
+        if attrs['interpretation'] == 'spectrum':
             hvplot = dr.hvplot(**kwargs).opts(title=title)
 
-        elif attrs['rank'] == 2:
+        elif attrs['interpretation'] == 'image':
             hvplot = dr.hvplot(**kwargs).opts(title=title,
                                               cmap='afmhot',
                                               frame_width=512,
