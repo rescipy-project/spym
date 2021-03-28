@@ -1,9 +1,9 @@
 import xarray as xr
 import numpy as np
 
-from .filters import SpymFilters
-from .level import SpymLevel
-from .plotting import SpymPlotting
+from .filters import Filters
+from .level import Level
+from .plotting import Plotting
 
 @xr.register_dataarray_accessor("spym")
 class _SpymDataArray:
@@ -18,17 +18,17 @@ class _SpymDataArray:
         self._mask = np.zeros(self._dr.data.shape, dtype=bool)
 
         # Initialize spym classes
-        self.level = SpymLevel(self)
-        self.filters = SpymFilters(self)
-        self.plotting = SpymPlotting(self)
+        self.Filters = Filters(self)
+        self.Level = Level(self)
+        self.Plotting = Plotting(self)
 
         # Expose some useful methods
-        self.fixzero = self.level.fixzero
-        self.plane = self.level.plane
-        self.align = self.level.align
-        self.destripe = self.filters.destripe
-        self.plot = self.plotting.plot
-        self.hvplot = self.plotting.hvplot
+        self.fixzero = self.Level.fixzero
+        self.plane = self.Level.plane
+        self.align = self.Level.align
+        self.destripe = self.Filters.destripe
+        self.plot = self.Plotting.plot
+        self.hvplot = self.Plotting.hvplot
 
     @property
     def background(self):

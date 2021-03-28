@@ -1,6 +1,6 @@
-from spym.process import filters as spym_filters
+from ..process import filters
 
-class SpymFilters():
+class Filters():
     ''' Filters.
 
     '''
@@ -16,7 +16,7 @@ class SpymFilters():
 
         '''
 
-        self._spym._dr.data = spym_filters.gauss(self._spym._dr.data, **kwargs)
+        self._spym._dr.data = filters.gauss(self._spym._dr.data, **kwargs)
 
     def median(self, **kwargs):
         ''' Apply median smoothing filter.
@@ -26,7 +26,7 @@ class SpymFilters():
 
         '''
 
-        self._spym._dr.data = spym_filters.median(self._spym._dr.data, **kwargs)
+        self._spym._dr.data = filters.median(self._spym._dr.data, **kwargs)
 
     def mean(self, **kwargs):
         ''' Apply mean smoothing filter.
@@ -36,7 +36,7 @@ class SpymFilters():
 
         '''
 
-        self._spym._dr.data = spym_filters.mean(self._spym._dr.data, **kwargs)
+        self._spym._dr.data = filters.mean(self._spym._dr.data, **kwargs)
 
     def sharpen(self, **kwargs):
         ''' Apply a sharpening filter.
@@ -47,7 +47,7 @@ class SpymFilters():
 
         '''
 
-        self._spym._dr.data = spym_filters.sharpen(self._spym._dr.data, **kwargs)
+        self._spym._dr.data = filters.sharpen(self._spym._dr.data, **kwargs)
 
     def destripe(self, **kwargs):
         ''' Find and remove scan stripes by averaging neighbourhood lines.
@@ -68,4 +68,4 @@ class SpymFilters():
             print("The DataArray is not an image. Abort.")
             return
 
-        self._spym._dr.data, self._spym._mask = spym_filters.destripe(self._spym._dr.data.astype(float), **kwargs)
+        self._spym._dr.data, self._spym._mask = filters.destripe(self._spym._dr.data.astype(float), **kwargs)

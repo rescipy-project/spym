@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import hvplot.xarray
 
-class SpymPlotting():
+class Plotting():
     ''' Plotting.
     
     '''

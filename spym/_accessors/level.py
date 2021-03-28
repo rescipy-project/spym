@@ -1,6 +1,6 @@
-from spym.process import level as spym_level
+from ..process import level
 
-class SpymLevel():
+class Level():
     ''' Level.
 
     '''
@@ -16,7 +16,7 @@ class SpymLevel():
 
         '''
 
-        self._spym._dr.data = spym_level.fixzero(self._spym._dr.data, **kwargs)
+        self._spym._dr.data = level.fixzero(self._spym._dr.data, **kwargs)
 
     def plane(self, **kwargs):
         '''Corrects for sample tilting by subtraction of a plane.
@@ -27,7 +27,7 @@ class SpymLevel():
             print("The DataArray is not an image. Abort.")
             return
 
-        self._spym._dr.data, self._spym._bkg = spym_level.plane(self._spym._dr.data.astype(float), **kwargs)
+        self._spym._dr.data, self._spym._bkg = level.plane(self._spym._dr.data.astype(float), **kwargs)
 
     def align(self, **kwargs):
         '''Align rows.
@@ -43,4 +43,4 @@ class SpymLevel():
             print("The DataArray is not an image. Abort.")
             return
 
-        self._spym._dr.data, self._spym._bkg = spym_level.align(self._spym._dr.data.astype(float), **kwargs)
+        self._spym._dr.data, self._spym._bkg = level.align(self._spym._dr.data.astype(float), **kwargs)
