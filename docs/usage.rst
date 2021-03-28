@@ -9,7 +9,8 @@ After installation you can import spym simply with:
     import spym
 
 
-Now the ``spym`` accessor will be available to xarray objects, e.g.:
+Now the ``spym`` accessor will be available to xarray objects.
+For example to apply the plane() function to a DataArray:
 
 .. code-block:: python
     
@@ -70,8 +71,8 @@ Supported file formats
 
 The ``spym`` package provides direct imports through the ``spym.load()`` function for a few file formats, at present:
 
+* RHK R9/R9plus *.sm4
+
+* Omicron Scala *.par
+
 * NeXus/HDF5 *.nxs (``nxarray`` package is needed)
-
-* RHK R9/R9plus *.sm4 (``rhksm4`` package is needed)
-
-* Omicron Scala *.par (``omicronscala`` package is needed)

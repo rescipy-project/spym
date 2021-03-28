@@ -10,7 +10,7 @@ setuptools.setup(
     version=__version__,
     author="Mirco Panighel",
     author_email="mirkopanighel@gmail.com",
-    description="A python package for processing Scanning Probe Microscopy (SPM) data.",
+    description="A python package for loading and processing Scanning Probe Microscopy (SPM) data.",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/rescipy-project/spym",
@@ -18,6 +18,7 @@ setuptools.setup(
     packages=setuptools.find_packages(),
     install_requires=[
         "xarray",
+        "scipy",
     ],
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
