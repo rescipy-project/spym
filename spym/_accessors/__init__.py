@@ -1,9 +1,8 @@
 import xarray as xr
-import numpy as np
 
-from .filters import Filters
-from .level import Level
-from .plotting import Plotting
+from ..process import Filters
+from ..process import Level
+from ..plotting import Plotting
 
 @xr.register_dataarray_accessor("spym")
 class _SpymDataArray:
@@ -14,8 +13,8 @@ class _SpymDataArray:
     def __init__(self, xarray_dr):
         self._dr = xarray_dr
 
-        self._bkg = np.zeros(self._dr.data.shape)
-        self._mask = np.zeros(self._dr.data.shape, dtype=bool)
+        self._bkg = None
+        self._mask = None
 
         # Initialize spym classes
         self.Filters = Filters(self)
