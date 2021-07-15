@@ -146,30 +146,6 @@ def _to_datarr(p, scaling):
     # Set filename
     dr.attrs['filename'] = dr.attrs['RHK_FileName']
 
-    # Set scaling to nanoamperes
-    if dr.attrs['units'] == "A":
-        dr.attrs['scaling_factor'] *= 1E9
-        dr.attrs['offset'] *= 1E9
-        dr.attrs['units'] = "nA"
-    if dr.attrs['setpoint_units'] == "A":
-        dr.attrs['setpoint'] *= 1E9
-        dr.attrs['setpoint_units'] = "nA"
-
-    # Set scaling to nanometers
-    if dr.attrs['units'] == "m":
-        dr.attrs['scaling_factor'] *= 1E9
-        dr.attrs['offset'] *= 1E9
-        dr.attrs['units'] = "nm"
-    if dr.coords['x'].attrs['units'] == "m":
-        dr = dr.assign_coords({"x": (dr.x * 1E9)})
-        dr.coords['x'].attrs['offset'] = dr.attrs['RHK_Xoffset'] * 1E9
-        dr.coords['x'].attrs['units'] = "nm"
-    if 'y' in dr.coords:
-        if dr.coords['y'].attrs['units'] == "m":
-            dr = dr.assign_coords({"y": (dr.y * 1E9)})
-            dr.coords['y'].attrs['offset'] = dr.attrs['RHK_Yoffset'] * 1E9
-            dr.coords['y'].attrs['units'] = "nm"
-
     # Set coordinates labels
     if dr.attrs['RHK_Xlabel'] == '':
         dr.coords['x'].attrs['long_name'] = 'x'
