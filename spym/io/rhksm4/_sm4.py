@@ -1159,26 +1159,14 @@ class RHKPage(RHKObjectContainer):
 
             data = raw_data.reshape(xsize, ysize)
 
-            # Check inversion of piezo sensitivity and adjust accordingly data orientation
-            try:#TODO add support for correspondent PRM metadata
-                xsens = self.attrs['RHK_PiezoSensitivity_TubeX']
-                ysens = self.attrs['RHK_PiezoSensitivity_TubeY']
-                if xsens < 0:
-                    xscale *= -1
-                    data = np.flip(data, axis=1)
-                if ysens < 0:
-                    yscale *= -1
-                    data = np.flip(data, axis=0)
-            except KeyError:
-                pass
-
             coords = [('y', yscale * np.arange(ysize, dtype=np.float64)),
                       ('x', xscale * np.arange(xsize, dtype=np.float64))]
-            # Check if coords are positive, if not change sign and flip
+
+            # Check scale and adjust accordingly data orientation
             if xscale < 0:
-                coords[1] = ('x', -np.flip(coords[1][1]))
+                data = np.flip(data, axis=1)
             if yscale < 0:
-                coords[0] = ('y', -np.flip(coords[0][1]))
+                data = np.flip(data, axis=0)
 
         elif self._page_data_type == 1: # Line type
 
