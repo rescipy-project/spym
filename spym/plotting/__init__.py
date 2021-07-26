@@ -13,7 +13,7 @@ class Plotting():
         ''' Plot data with custom parameters using matplotlib.
 
         Args:
-            title: title of the figure (string). By default gives some basic information on the data plotted. Pass an empty string to disable it.
+            title: (optional) title of the figure (string). By default gives some basic information on the data plotted. Pass an empty string to disable it.
             **kwargs: any argument accepted by xarray.plot() function.
 
         '''
@@ -34,6 +34,7 @@ class Plotting():
             plot = dr.plot.pcolormesh(**kwargs)
             fig = plot.get_figure()
             ax = plot.axes
+            ax.invert_yaxis()
             # Fit figure pixel size to image
             fig_width, fig_height = self._fit_figure_to_image(fig, dr.data, ax)
             fig.set_size_inches(fig_width, fig_height)
@@ -62,7 +63,7 @@ class Plotting():
         ''' Plot data with custom parameters using hvplot.
 
         Args:
-            title: title of the figure (string). By default gives some basic information on the data plotted. Pass an empty string to disable it.
+            title: (optional) title of the figure (string). By default gives some basic information on the data plotted. Pass an empty string to disable it.
             **kwargs: any argument accepted by hvplot() function.
 
         '''
@@ -83,6 +84,7 @@ class Plotting():
                                               cmap='afmhot',
                                               frame_width=512,
                                               frame_height=512,
+                                              invert_yaxis=True,
                                               data_aspect=1)
 
         else:
