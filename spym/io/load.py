@@ -44,16 +44,6 @@ def load(filename, scaling=True):
             print("Error: the file does not appear to be valid.")
             return None
 
-    #TODO
-    '''
-    if filename.endswith(".sxm") or filename.endswith(".SXM"):
-        try:
-            ds = nanonissxm.to_dataset(filename, scaling=scaling)
-        except:
-            print("Error: the file does not appear to be valid.")
-            return None
-    '''
-
     for dr in ds:
         ds[dr].attrs["filename"] = os.path.basename(filename)
 
