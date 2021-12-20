@@ -13,7 +13,7 @@ spym
    usage
 
 
-``spym`` is supported by the `reScipy project <https://rescipy-project.readthedocs.io>`_.
+``spym`` is part of the `reScipy project <https://rescipy-project.readthedocs.io>`_.
 
 
 Feedback

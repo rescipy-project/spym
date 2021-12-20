@@ -18,7 +18,7 @@
 # -- Project information -----------------------------------------------------
 
 project = 'spym'
-copyright = '2020, Mirco Panighel'
+copyright = '2021, Mirco Panighel'
 author = 'Mirco Panighel'
 
 

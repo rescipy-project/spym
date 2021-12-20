@@ -10,29 +10,12 @@ After installation you can import spym simply with:
 
 
 Now the ``spym`` accessor will be available to xarray objects.
-For example to apply the plane() function to a DataArray:
+For example to apply the plane() function to an xarray DataArray:
 
 .. code-block:: python
     
     dr = xarray.DataArray()
     dr.spym.plane()
-
-Many of the ``spym`` functions are also applicable directly to numpy arrays:
-
-.. code-block:: python
-    
-    from spym.level import align
-    
-    aligned, background = align(my_array, baseline='median')
-    
-
-The documentation of each ``spym`` method can be accessed with the ``?`` syntax:
-
-.. code-block:: python
-    
-    dr.spym.plane?
-
-See the API Reference section for a list of all the methods available.
 
 
 Examples
@@ -66,12 +49,30 @@ The spym package is best integrated with xarray objects. Here is a typical usage
     tf.spym.plot()
 
 
+Many of the ``spym`` functions are also applicable directly to numpy arrays:
+
+.. code-block:: python
+    
+    from spym.level import align
+    
+    aligned, background = align(my_array, baseline='median')
+    
+
+The documentation of each ``spym`` method can be accessed with the ``?`` syntax:
+
+.. code-block:: python
+    
+    dr.spym.plane?
+
+See the API Reference section for a list of all the methods available.
+
+
 Supported file formats
 ======================
 
 The ``spym`` package provides direct imports through the ``spym.load()`` function for a few file formats, at present:
 
-* RHK R9/R9plus *.sm4
+* RHK SM4 *.sm4
 
 * Omicron Scala *.par
 

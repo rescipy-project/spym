@@ -113,6 +113,7 @@ def _to_datarr(ch, scaling):
     dr.attrs['offset'] = 0.0
     dr.attrs['start_time'] = dr.attrs['Timestamp']
     dr.attrs['notes'] = dr.attrs['Comment']
+    dr.attrs['interpretation'] = 'image'
 
     ## Set additional NXstm nexusformat attributes
     dr.attrs['bias'] = dr.attrs['GapVoltage']

@@ -1,5 +1,5 @@
 import os
-from . import rhksm4, omicronscala, nanonissxm
+from . import rhksm4, omicronscala
 
 def load(filename, scaling=True):
     ''' Import data from common SPM file formats.
