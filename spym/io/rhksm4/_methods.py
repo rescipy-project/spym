@@ -145,6 +145,7 @@ def _to_datarr(p, scaling):
 
     # Set filename
     dr.attrs['filename'] = dr.attrs['RHK_FileName']
+    dr.attrs.pop('RHK_FileName')
 
     # Set coordinates labels
     if dr.attrs['RHK_Xlabel'] == '':
