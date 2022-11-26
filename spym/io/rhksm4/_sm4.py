@@ -1174,7 +1174,7 @@ class RHKPage(RHKObjectContainer):
 
             xoffset = self.attrs['RHK_Xoffset']
             coords = [('y', int(yscale) * np.arange(ysize, dtype=np.uint32)),
-                      ('x', int(xscale) * np.arange(xsize, dtype=np.float64) + xoffset)]
+                      ('x', xscale * np.arange(xsize, dtype=np.float64) + xoffset)]
 
             if self._line_type == 22: # Discrete spectroscopy has shape xsize*(ysize+1)
                 tmp = raw_data.reshape(xsize, ysize+1).transpose()
