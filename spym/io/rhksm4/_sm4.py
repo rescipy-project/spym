@@ -803,7 +803,11 @@ class RHKObjectContainer:
         self.attrs[metaString + '_HarmonicFactor'] = self._sm4._readb(np.float64, 1)
         self.attrs[metaString + '_PhaseOffset'] = self._sm4._readb(np.float64, 1)
 
-        self.attrs[metaString + '_FilterCutoffFrequency'] = self._sm4._readstr()
+        #Fix _FilterCutoffFrequency reading from some file versions
+        try:
+            self.attrs[metaString + '_FilterCutoffFrequency'] = self._sm4._readb(np.float64, 1)
+        except:
+            self.attrs[metaString + '_FilterCutoffFrequency'] = self._sm4._readstr()
 
         self.attrs[metaString + '_FreqUnit'] = self._sm4._readstr()
         self.attrs[metaString + '_PhaseUnit'] = self._sm4._readstr()
