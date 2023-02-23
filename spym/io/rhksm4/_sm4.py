@@ -1163,8 +1163,8 @@ class RHKPage(RHKObjectContainer):
 
             data = raw_data.reshape(xsize, ysize)
 
-            coords = [('y', abs(yscale) * np.arange(ysize, dtype=np.float64)),
-                      ('x', abs(xscale) * np.arange(xsize, dtype=np.float64))]
+            coords = [('x', abs(xscale) * np.arange(xsize, dtype=np.float64)),
+                      ('y', abs(yscale) * np.arange(ysize, dtype=np.float64))]
 
             # Check scale and adjust accordingly data orientation
             if xscale < 0:
@@ -1174,11 +1174,11 @@ class RHKPage(RHKObjectContainer):
 
         elif self._page_data_type == 1: # Line type
 
-            data = raw_data.reshape(ysize, xsize)
+            data = raw_data.reshape(xsize, ysize)
 
             xoffset = self.attrs['RHK_Xoffset']
-            coords = [('y', int(yscale) * np.arange(ysize, dtype=np.uint32)),
-                      ('x', xscale * np.arange(xsize, dtype=np.float64) + xoffset)]
+            coords = [('x', xscale * np.arange(xsize, dtype=np.float64) + xoffset),
+                      ('y', int(yscale) * np.arange(ysize, dtype=np.uint32))]
 
             if self._line_type == 22: # Discrete spectroscopy has shape xsize*(ysize+1)
                 tmp = raw_data.reshape(xsize, ysize+1).transpose()
