@@ -226,7 +226,11 @@ class RHKsm4:
 
         length = self._readb(np.uint16, 1)#first 2 bytes is the string length
         string = ''.join([chr(i) for i in np.fromfile(self._file, dtype=np.uint16, count=length)])
-        return string.rstrip('\x00')
+        try:
+            string.encode("utf8")
+            return string.rstrip('\x00')
+        except UnicodeEncodeError:
+            return ""
 
     def _readtime(self):
         '''Read RHK filetime object
@@ -803,14 +807,15 @@ class RHKObjectContainer:
         self.attrs[metaString + '_HarmonicFactor'] = self._sm4._readb(np.float64, 1)
         self.attrs[metaString + '_PhaseOffset'] = self._sm4._readb(np.float64, 1)
 
-        #Fix _FilterCutoffFrequency reading from some file versions
+        #Try FilterCutoffFrequency reading from some file versions
         try:
-            self.attrs[metaString + '_FilterCutoffFrequency'] = self._sm4._readb(np.float64, 1)
-        except:
             self.attrs[metaString + '_FilterCutoffFrequency'] = self._sm4._readstr()
-
-        self.attrs[metaString + '_FreqUnit'] = self._sm4._readstr()
-        self.attrs[metaString + '_PhaseUnit'] = self._sm4._readstr()
+            self.attrs[metaString + '_FreqUnit'] = self._sm4._readstr()
+            self.attrs[metaString + '_PhaseUnit'] = self._sm4._readstr()
+        except:
+            self.attrs[metaString + '_FilterCutoffFrequency'] = ""
+            self.attrs[metaString + '_FreqUnit'] = ""
+            self.attrs[metaString + '_PhaseUnit'] = ""
 
     def _read_PIControllerInfo(self, offset, metaString):
         ''' Read PI Controller Info for the current page.
