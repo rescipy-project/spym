@@ -9,11 +9,13 @@ class Plotting():
     def __init__(self, spym_instance):
         self._spym = spym_instance
 
-    def plot(self, title=None, **kwargs):
+    def plot(self, title=None, waterfall=False, waterfall_limit=15, **kwargs):
         ''' Plot data with custom parameters using matplotlib.
 
         Args:
             title: (optional) title of the figure (string). By default gives some basic information on the data plotted. Pass an empty string to disable it.
+            waterfall: (optional) boolean determining if plot spectrum data as waterfall (default is False).
+            waterfall_limit: (optional) number of spectra above which spectrum data is plotted as image instead of waterfall (default is 15).
             **kwargs: any argument accepted by xarray.plot() function.
 
         '''
@@ -26,8 +28,13 @@ class Plotting():
 
         # Set plot properties
         if attrs['interpretation'] == 'spectrum':
-            # plot wraps matplotlib.pyplot.plot()
-            plot = dr.plot.line(hue=dr.coords.dims[1], **kwargs)
+            y_coord = dr.coords[dr.coords.dims[1]]
+            # Check if plot spectra as waterfall or image
+            if len(y_coord.data) <= waterfall_limit or waterfall:
+                # plot wraps matplotlib.pyplot.plot()
+                plot = dr.plot.line(hue=dr.coords.dims[1], **kwargs)
+            else:
+                plot = dr.plot(**kwargs)
 
         elif attrs['interpretation'] == 'image':
             # plot is an instance of matplotlib.collections.QuadMesh
