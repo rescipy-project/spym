@@ -27,7 +27,7 @@ class Plotting():
         # Set plot properties
         if attrs['interpretation'] == 'spectrum':
             # plot wraps matplotlib.pyplot.plot()
-            plot = dr.plot.line(hue="y", **kwargs)
+            plot = dr.plot.line(hue=dr.coords.dims[1], **kwargs)
 
         elif attrs['interpretation'] == 'image':
             # plot is an instance of matplotlib.collections.QuadMesh

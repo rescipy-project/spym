@@ -100,13 +100,20 @@ def _to_datarr(p, scaling):
                       attrs=p.attrs,
                       name=p.label)
 
+    ## Define coordinates labels
+    x_label = dr.coords.dims[0]
+    try:
+        y_label = dr.coords.dims[1]
+    except IndexError:
+        y_label = ""
+
     ## Set xarray/nexusformat attributes
     dr.attrs['long_name'] = dr.name.replace("_", " ")
     dr.attrs['units'] = dr.attrs['RHK_Zunits']
 
-    dr.coords['x'].attrs['units'] = dr.attrs['RHK_Xunits']
-    if 'y' in dr.coords:
-        dr.coords['y'].attrs['units'] = dr.attrs['RHK_Yunits']
+    dr.coords[x_label].attrs['units'] = dr.attrs['RHK_Xunits']
+    if y_label in dr.coords:
+        dr.coords[y_label].attrs['units'] = dr.attrs['RHK_Yunits']
 
     ## Set additional nexusformat attributes
     dr.attrs['scaling_factor'] = dr.attrs['RHK_Zscale']
@@ -139,9 +146,9 @@ def _to_datarr(p, scaling):
     dr.attrs['scan_angle'] = dr.attrs['RHK_Angle']
     dr.attrs['time_per_point'] = dr.attrs['RHK_Period']
 
-    dr.coords['x'].attrs['offset'] = dr.attrs['RHK_Xoffset']
-    if 'y' in dr.coords:
-        dr.coords['y'].attrs['offset'] = dr.attrs['RHK_Yoffset']
+    dr.coords[x_label].attrs['offset'] = dr.attrs['RHK_Xoffset']
+    if y_label in dr.coords:
+        dr.coords[y_label].attrs['offset'] = dr.attrs['RHK_Yoffset']
 
     # Set filename
     dr.attrs['filename'] = dr.attrs['RHK_FileName']
@@ -149,14 +156,14 @@ def _to_datarr(p, scaling):
 
     # Set coordinates labels
     if dr.attrs['RHK_Xlabel'] == '':
-        dr.coords['x'].attrs['long_name'] = 'x'
+        dr.coords[x_label].attrs['long_name'] = x_label
     else:
-        dr.coords['x'].attrs['long_name'] = dr.attrs['RHK_Xlabel']
-    if 'y' in dr.coords:
+        dr.coords[x_label].attrs['long_name'] = dr.attrs['RHK_Xlabel']
+    if y_label in dr.coords:
         if dr.attrs['RHK_PageDataType'] == 1:
-            dr.coords['y'].attrs['long_name'] = 'Trace'
+            dr.coords[y_label].attrs['long_name'] = 'Trace'
         else:
-            dr.coords['y'].attrs['long_name'] = 'y'
+            dr.coords[y_label].attrs['long_name'] = y_label
 
     # Scale data to physical units
     if scaling:
