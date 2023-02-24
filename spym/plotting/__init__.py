@@ -34,7 +34,7 @@ class Plotting():
                 # plot wraps matplotlib.pyplot.plot()
                 plot = dr.plot.line(hue=dr.coords.dims[1], **kwargs)
             else:
-                plot = dr.plot(**kwargs)
+                plot = dr.plot(y=dr.coords.dims[1], **kwargs)
 
         elif attrs['interpretation'] == 'image':
             # plot is an instance of matplotlib.collections.QuadMesh
@@ -84,7 +84,8 @@ class Plotting():
 
         # Set hvplot properties
         if attrs['interpretation'] == 'spectrum':
-            hvplot = dr.hvplot(**kwargs).opts(title=title)
+            hvplot = dr.hvplot(**kwargs).opts(title=title,
+                                              invert_axes=True)
 
         elif attrs['interpretation'] == 'image':
             hvplot = dr.hvplot(**kwargs).opts(title=title,
