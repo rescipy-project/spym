@@ -12,21 +12,24 @@ class stmdata:
 	alternate: True if forward and backward bias sweeps are turned on, False if not
 	"""
 	def __init__(self, filename, repetitions = 1, alternate = True, **kwargs):
+		# check if parameters passed to the class are valid
 		if repetitions <= 0:
 			print("repetitions needs to be an integer, with a value of 1 or above. Default is 1")
 		elif isinstance(repetitions, int) == False:
 			print("repetitions needs to be an integer. Default is 1")
-
 		if isinstance(alternate, bool) == False:
 			print("alternate needs to be a bool variable: True or False. Default is True")
 
 		self.filename = filename
+		self.repetitions = repetitions
+		self.alternate = alternate
 		# total number of spectra in one postion of the tip
 		self.numberofspectra = (alternate + 1)*repetitions
 		
 		"""Load the data from rhksm4"""
 		self.spymdata = load_spym(filename)
-		self.lia_fw, self.lia_bw = rearrange_specmap(self.spymdata.LIA_Current.data)
+		# rearrange the spectroscopy data into a map
+		self.lia_fw, self.lia_bw = rearrange_specmap(self)
 
 	def print_info(self):
 		for item in self.__dict__:
@@ -35,7 +38,13 @@ class stmdata:
 		for item in self.spymdata:
 			print('\t', item)
 
-def rearrange_specmap(specarray, repetitions = 1, alternate = True, **kwargs):
+def lia_xarray(stmdata_object):
+	print('z')
+
+def current_xarray(stmdata_object):
+	print('zz')
+
+def rearrange_specmap(stmdata_object):
 	"""
 	In spym the spectroscopy data is loaded into an array,
 	which has axis=0 the number of datapoints in the spectra
@@ -46,9 +55,11 @@ def rearrange_specmap(specarray, repetitions = 1, alternate = True, **kwargs):
 	These options can be changed by the parameters, `repetitions` and `alternate`
 	"""
 
-	# specarray is a numpy array
+	# extract the numpy array containing the LIA data from the spym object
+	specarray = stmdata_object.spymdata.LIA_Current.data
+	
 	# total number of spectra in one postion of the tip
-	numberofspectra = (alternate + 1)*repetitions
+	numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
 	# size of the map in mapsize x mapsize
 	mapsize = int(pl.sqrt(specarray.shape[1] / numberofspectra))
 	# collect all spectra measured in the same `X, Y` coordinate into an axis (last) of an array.
