@@ -1,5 +1,3 @@
-# spym
+# RHK STM data analysis tools
 
-A Python package and xarray accessor for loading and processing Scanning Probe Microscopy (SPM) data.
-
-See the [documentation](https://spym-docs.readthedocs.io/en/latest/) for detailed information on installation and usage of ``spym``.
+Based on the spym project, for personal use in our research group. If you want to contribute, please do so in the main [rescipy project](https://github.com/rescipy-project/spym).
