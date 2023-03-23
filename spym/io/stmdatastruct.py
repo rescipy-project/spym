@@ -96,6 +96,7 @@ def lia_xr(stmdata_object):
 
 	# constructing the xarray DataArray for the spectrum
 	# stacking the forward and backward bias sweeps and using the scandir coordinate
+	# also adding DataArray specific attributes
 	xrspec = xr.DataArray(pl.stack((liafw, liabw), axis=-1),
                           dims = ['bias', 'specpos_x', 'specpos_y', 'repetitions', 'scandir'],
                           coords = dict(
@@ -160,6 +161,7 @@ def current_xr(stmdata_object):
 
 	# constructing the xarray DataArray for the spectrum
 	# stacking the forward and backward bias sweeps and using the scandir coordinate
+	# also adding DataArray specific attributes
 	xrcurrent = xr.DataArray(pl.stack((currentfw, currentbw), axis=-1),
                           dims = ['bias', 'specpos_x', 'specpos_y', 'repetitions', 'scandir'],
                           coords = dict(
@@ -174,7 +176,6 @@ def current_xr(stmdata_object):
                           )
                     )
 	return xrcurrent
-
 
 def rescale_lia(stmdata_object):
 	"""
@@ -228,6 +229,8 @@ def add_metadata(stmdata_object):
 	stmdata_object.lia.attrs['measurement time'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Time']
 	stmdata_object.current.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
 
+	stmdata_object.lia.attrs['time_per_point'] = stmdata_object.spymdata.LIA_Current.attrs['time_per_point']
+	stmdata_object.current.attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
 
 	return stmdata_object
 
