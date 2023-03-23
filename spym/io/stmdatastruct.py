@@ -23,22 +23,9 @@ class stmdata:
 		self.filename = filename
 		self.repetitions = repetitions
 		self.alternate = alternate
-		# total number of spectra in one postion of the tip
-		self.numberofspectra = (alternate + 1)*repetitions
-		
-		# Load the data from rhksm4
-		self.spymdata = load_spym(filename)
-		
-		# rearrange the spectroscopy data into a map
-		self.lia = lia_xr(self)
-		self.current = current_xr(self)
 
-		# rescale the dimensions to nice values
-		self.lia = rescale_lia(self)
-		self.current = rescale_current(self)
-
-		# add metadata to the xarray
-		self = add_metadata(self)
+		# if the file contains spectroscopy map
+		self = load_specmap(self)
 
 	def print_info(self):
 		for item in self.__dict__:
@@ -46,6 +33,28 @@ class stmdata:
 		print('\nspymdata:')
 		for item in self.spymdata:
 			print('\t', item)
+
+
+def load_specmap(stmdata_object):
+	# total number of spectra in one postion of the tip
+	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
+	
+	# Load the data from rhksm4
+	stmdata_object.spymdata = load_spym(stmdata_object.filename)
+	
+	# rearrange the spectroscopy data into a map
+	stmdata_object.lia = lia_xr(stmdata_object)
+	stmdata_object.current = current_xr(stmdata_object)
+
+	# rescale the dimensions to nice values
+	stmdata_object.lia = rescale_lia(stmdata_object)
+	stmdata_object.current = rescale_current(stmdata_object)
+
+	# add metadata to the xarray
+	stmdata_object = add_metadata(stmdata_object)
+
+	return stmdata_object
+
 
 def lia_xr(stmdata_object):
 	"""
