@@ -11,21 +11,32 @@ class stmdata:
 	repetitions: the number of spectra in each physical position of the tip
 	alternate: True if forward and backward bias sweeps are turned on, False if not
 	"""
-	def __init__(self, filename, repetitions = 1, alternate = True, **kwargs):
+	def __init__(self, filename, repetitions = 1, alternate = True, datatype = 'map', **kwargs):
 		# check if parameters passed to the class are valid
 		if repetitions <= 0:
 			print("repetitions needs to be an integer, with a value of 1 or above. Default is 1")
 		elif isinstance(repetitions, int) == False:
 			print("repetitions needs to be an integer. Default is 1")
+
 		if isinstance(alternate, bool) == False:
 			print("alternate needs to be a bool variable: True or False. Default is True")
 
+		if (datatype != 'map') and (datatype != 'line') and (datatype != 'spec') and (datatype != 'image'):
+			print('datatype must be either: map, line, spec or image')
+			return
+
+
 		self.filename = filename
+		# number of spectra at a tip position
 		self.repetitions = repetitions
+		# Boolean value, True if alternate scan directions is turned on
 		self.alternate = alternate
 
 		# if the file contains spectroscopy map
-		self = load_specmap(self)
+		if datatype == 'map':
+			self = load_specmap(self)
+		elif datatype == 'line':
+			self = load_line(self)
 
 	def print_info(self):
 		for item in self.__dict__:
@@ -39,9 +50,41 @@ def load_specmap(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
 	
-	# Load the data from rhksm4
+	# Load the data using spym
 	stmdata_object.spymdata = load_spym(stmdata_object.filename)
 	
+	# check software version. Not tested for MinorVer < 6
+	l = list(stmdata_object.spymdata.keys())
+	if stmdata_object.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
+		print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
+	
+	# create lia and current DataArrays
+	# rearrange the spectroscopy data into a map
+	stmdata_object.lia = lia_xr(stmdata_object)
+	stmdata_object.current = current_xr(stmdata_object)
+
+	# rescale the dimensions to nice values
+	stmdata_object.lia = rescale_lia(stmdata_object)
+	stmdata_object.current = rescale_current(stmdata_object)
+
+	# add metadata to the xarray
+	stmdata_object = add_metadata(stmdata_object)
+
+	return stmdata_object
+
+def load_line(stmdata_object):
+	# total number of spectra in one postion of the tip
+	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
+	
+	# Load the data using spym
+	stmdata_object.spymdata = load_spym(stmdata_object.filename)
+	
+	# check software version. Not tested for MinorVer < 6
+	l = list(stmdata_object.spymdata.keys())
+	if stmdata_object.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
+		print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
+	
+	# create lia and current DataArrays
 	# rearrange the spectroscopy data into a map
 	stmdata_object.lia = lia_xr(stmdata_object)
 	stmdata_object.current = current_xr(stmdata_object)
@@ -107,13 +150,13 @@ def lia_xr(stmdata_object):
 	# stacking the forward and backward bias sweeps and using the scandir coordinate
 	# also adding DataArray specific attributes
 	xrspec = xr.DataArray(pl.stack((liafw, liabw), axis=-1),
-                          dims = ['bias', 'specpos_x', 'specpos_y', 'repetitions', 'scandir'],
+                          dims = ['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'],
                           coords = dict(
                                bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
                                specpos_x = tempx,
                                specpos_y = tempy,
                                repetitions = pl.array(range(stmdata_object.repetitions)),
-                               scandir = pl.array(['left', 'right'])
+                               biasscandir = pl.array(['left', 'right'], dtype = 'U')
                           ),
                           attrs = dict(
                                    filename = stmdata_object.filename
@@ -172,13 +215,13 @@ def current_xr(stmdata_object):
 	# stacking the forward and backward bias sweeps and using the scandir coordinate
 	# also adding DataArray specific attributes
 	xrcurrent = xr.DataArray(pl.stack((currentfw, currentbw), axis=-1),
-                          dims = ['bias', 'specpos_x', 'specpos_y', 'repetitions', 'scandir'],
+                          dims = ['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'],
                           coords = dict(
                                bias = stmdata_object.spymdata.Current.Current_x.data,
                                specpos_x = tempx,
                                specpos_y = tempy,
                                repetitions = pl.array(range(stmdata_object.repetitions)),
-                               scandir = pl.array(['left', 'right'])
+                               biasscandir = pl.array(['left', 'right'], dtype = 'U')
                           ),
                           attrs = dict(
                                    filename = stmdata_object.filename
