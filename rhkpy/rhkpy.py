@@ -105,7 +105,7 @@ def load_specmap(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
 	# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-	stmdata_object = xr_spec(stmdata_object)
+	stmdata_object = xr_map(stmdata_object)
 	# rescale the dimensions to nice values
 	stmdata_object = rescale_spec(stmdata_object)
 	# add metadata to the xarray
@@ -113,6 +113,10 @@ def load_specmap(stmdata_object):
 	return stmdata_object
 
 def load_line(stmdata_object):
+	# total number of spectra in one postion of the tip
+	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
+	# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
+	stmdata_object = xr_line(stmdata_object)
 	return stmdata_object
 
 def load_spec(stmdata_object):
@@ -121,9 +125,9 @@ def load_spec(stmdata_object):
 def load_image(stmdata_object):
 	return stmdata_object
 
-def xr_spec(stmdata_object):
+def xr_map(stmdata_object):
 	"""
-	Create a DataSet containing the Lok-In (LIA) and Current spectroscopy data
+	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions as coordinates
 
 	In spym the spectroscopy data is loaded into an array,
@@ -213,6 +217,22 @@ def xr_spec(stmdata_object):
 	)
 
 	stmdata_object.specmap = xrspec
+	return stmdata_object
+
+
+def xr_line(stmdata_object):
+	"""
+	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
+	Use the absolute values of the tip positions as coordinates
+
+	In spym the spectroscopy data is loaded into an array,
+	which has axis=0 the number of datapoints in the spectra
+	and axis=1 the number of spectra in total.
+
+	When rearranging, the number of repetitions within each tip position is assumed to be 1
+	and alternate scan direction is assumed to be turned on.
+	These options can be changed by the parameters, `repetitions` and `alternate`
+	"""
 	return stmdata_object
 
 
