@@ -1,5 +1,6 @@
 import xarray as xr
 import pylab as pl
+import numpy as np
 import spym
 ## Using the old loader
 from spym.io import rhksm4
@@ -31,6 +32,7 @@ class stmdata:
 		self.repetitions = repetitions
 		# Boolean value, True if alternate scan directions is turned on
 		self.alternate = alternate
+		self.datatype = datatype
 
 		# Load the data using spym
 		self.spymdata = load_spym(self.filename)
@@ -39,11 +41,18 @@ class stmdata:
 		if self.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
 			print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
 
+		# check type of data contained in the file
+		self.datatype, self.spectype = checkdatatype(self)
+
 		# if the file contains spectroscopy map
-		if datatype == 'map':
+		if self.datatype == 'map':
 			self = load_specmap(self)
-		elif datatype == 'line':
+		elif self.datatype == 'line':
 			self = load_line(self)
+		elif self.datatype == 'spec':
+			self = load_spec(self)
+		elif self.datatype == 'image':
+			self = load_image(self)
 
 	def print_info(self):
 		for item in self.__dict__:
@@ -53,24 +62,64 @@ class stmdata:
 			print('\t', item)
 
 
+def checkdatatype(stmdata_object):
+	# Look at the metadata and structure of spectra coordinates to determine the type of file being worked with
+	l = list(stmdata_object.spymdata.keys())
+	if stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 7:
+		stmdata_object.spectype = 'iv'
+	elif stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 8:
+		stmdata_object.spectype = 'iz'
+	elif stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 0:
+		stmdata_object.spectype = 'none'
+	
+	if stmdata_object.spymdata[l[-1]].attrs['RHK_PageType'] == 1:
+		stmdata_object.datatype = 'image'
+	elif stmdata_object.spymdata[l[-1]].attrs['RHK_PageType'] == 38:
+		stmdata_object.datatype = 'spec'
+	elif stmdata_object.spymdata[l[-1]].attrs['RHK_PageType'] == 16:
+		# this can be either a line spectrum or a map
+		# decide based on the aspect ratio of the spectroscopy tip positions
+		xcoo = pl.array(stmdata_object.spymdata[l[-1]].attrs['RHK_SpecDrift_Xcoord'])
+		ycoo = pl.array(stmdata_object.spymdata[l[-1]].attrs['RHK_SpecDrift_Ycoord'])
+		if aspect_ratio(xcoo, ycoo) > 10:
+			stmdata_object.datatype = 'line'
+		else:
+			stmdata_object.datatype = 'map'
+
+	print(stmdata_object.datatype)
+	print(stmdata_object.spectype)
+	return stmdata_object.datatype, stmdata_object.spectype
+
+def aspect_ratio(x, y):
+    xy = np.stack((x, y), axis=0)
+    eigvals, eigvecs = np.linalg.eig(np.cov(xy))
+    center = xy.mean(axis=-1)
+    for val, vec in zip(eigvals, eigvecs.T):
+        val *= 2
+        xcov,ycov = np.vstack((center + val * vec, center, center - val * vec)).T
+    aspect = max(eigvals) / min(eigvals)
+    return aspect
+
+
 def load_specmap(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
-	
 	# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-	stmdata_object.specmap = xr_spec(stmdata_object)
-
+	stmdata_object = xr_spec(stmdata_object)
 	# rescale the dimensions to nice values
 	stmdata_object = rescale_spec(stmdata_object)
-
 	# add metadata to the xarray
 	stmdata_object = add_metadata(stmdata_object)
-
 	return stmdata_object
 
 def load_line(stmdata_object):
 	return stmdata_object
 
+def load_spec(stmdata_object):
+	return stmdata_object
+
+def load_image(stmdata_object):
+	return stmdata_object
 
 def xr_spec(stmdata_object):
 	"""
@@ -151,7 +200,7 @@ def xr_spec(stmdata_object):
 	xrspec = xr.Dataset(
 		data_vars = dict(
 			lia = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
-			current = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)),
+			current = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1))
 			),
 		coords = dict(
 			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
@@ -163,7 +212,8 @@ def xr_spec(stmdata_object):
 		attrs = dict(filename = stmdata_object.filename)
 	)
 
-	return xrspec
+	stmdata_object.specmap = xrspec
+	return stmdata_object
 
 
 def rescale_spec(stmdata_object):
@@ -204,10 +254,8 @@ def add_metadata(stmdata_object):
 	stmdata_object.specmap['lia'].attrs['setpoint units'] = 'pA'
 	stmdata_object.specmap['current'].attrs['setpoint units'] = 'pA'
 
-	stmdata_object.specmap['lia'].attrs['measurement date'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Date']
-	stmdata_object.specmap['current'].attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
-	stmdata_object.specmap['lia'].attrs['measurement time'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Time']
-	stmdata_object.specmap['current'].attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
+	stmdata_object.specmap.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
+	stmdata_object.specmap.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
 
 	stmdata_object.specmap['lia'].attrs['time_per_point'] = stmdata_object.spymdata.LIA_Current.attrs['time_per_point']
 	stmdata_object.specmap['current'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
