@@ -87,9 +87,8 @@ def checkdatatype(stmdata_object):
 		else:
 			stmdata_object.datatype = 'map'
 
-	print(stmdata_object.datatype)
-	print(stmdata_object.spectype)
 	return stmdata_object.datatype, stmdata_object.spectype
+
 
 def aspect_ratio(x, y):
     xy = np.stack((x, y), axis=0)
@@ -113,6 +112,7 @@ def load_specmap(stmdata_object):
 	stmdata_object = add_map_metadata(stmdata_object)
 	return stmdata_object
 
+
 def load_line(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
@@ -124,11 +124,24 @@ def load_line(stmdata_object):
 	stmdata_object = add_line_metadata(stmdata_object)
 	return stmdata_object
 
+
 def load_spec(stmdata_object):
+	# in this case the total number of spectra can be inferred
+	# total number of spectra in one postion of the tip
+	stmdata_object.repetitions = int(stmdata_object.spymdata.LIA_Current.data.shape[1] / 2)
+	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
+	# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
+	stmdata_object = xr_spec(stmdata_object)
+	# rescale the dimensions to nice values
+	stmdata_object = rescale_spec(stmdata_object)
+	# add metadata to the xarray
+	stmdata_object = add_spec_metadata(stmdata_object)
 	return stmdata_object
+
 
 def load_image(stmdata_object):
 	return stmdata_object
+
 
 def xr_map(stmdata_object):
 	"""
@@ -254,12 +267,14 @@ def xr_line(stmdata_object):
 	# reshape LIA data
 	# Every other spectrum is a forward and backward scan in bias sweep. Separate the forward and backward scans into differing arrays by slicing.
 	# These are all the forward and backward bias sweep spectra, arranged along axis=1, with axis=2 being the repetitions
-	liafw = specarray[:, 0::2]
-	liabw = specarray[:, 1::2]
+	templia = pl.reshape(specarray, (specarray.shape[0], -1, numberofspectra), order='C')
+	liafw = templia[:, :, 0::2]
+	liabw = templia[:, :, 1::2]
 
 	# reshape Current data
-	currentfw = currentarray[:, 0::2]
-	currentbw = currentarray[:, 1::2]
+	tempcurr = pl.reshape(currentarray, (currentarray.shape[0], -1, numberofspectra), order='C')
+	currentfw = tempcurr[:, :, 0::2]
+	currentbw = tempcurr[:, :, 1::2]
 
 	"""
 	Coordinates of the spectroscopy map
@@ -282,15 +297,15 @@ def xr_line(stmdata_object):
 	# also adding specific attributes
 	xrspec = xr.Dataset(
 		data_vars = dict(
-			lia = (['bias', 'dist', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
-			current = (['bias', 'dist', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)),
+			lia = (['bias', 'dist', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
+			current = (['bias', 'dist', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)),
 			speccoord_x = (['dist'], tempx),
 			speccoord_y = (['dist'], tempy)
 			),
 		coords = dict(
 			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
 			dist = linecoord,
-			# repetitions = pl.array(range(stmdata_object.repetitions)),
+			repetitions = pl.array(range(stmdata_object.repetitions)),
 			biasscandir = pl.array(['left', 'right'], dtype = 'U')
 			),
 		attrs = dict(filename = stmdata_object.filename)
@@ -298,6 +313,64 @@ def xr_line(stmdata_object):
 
 	xrspec.coords['dist'].attrs['units'] = 'nm'
 	xrspec.coords['dist'].attrs['long units'] = 'nanometer'
+	stmdata_object.spectra = xrspec
+	return stmdata_object
+
+
+def xr_spec(stmdata_object):
+	"""
+	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
+	Use the absolute values of the tip positions are in the attributes
+	"""
+
+	# extract the numpy array containing the LIA data from the spym object
+	specarray = stmdata_object.spymdata.LIA_Current.data
+	# extract the numpy array containing the Current data from the spym object
+	currentarray = stmdata_object.spymdata.Current.data
+
+	# reshape LIA data
+	# Every other spectrum is a forward and backward scan in bias sweep. Separate the forward and backward scans into differing arrays by slicing.
+	liafw = specarray[:, 0::2]
+	liabw = specarray[:, 1::2]
+
+	# reshape Current data
+	currentfw = currentarray[:, 0::2]
+	currentbw = currentarray[:, 1::2]
+
+	"""
+	Coordinates of the spectroscopy map
+	"""
+	# 'RHK_SpecDrift_Xcoord' are the coordinates of the spectra.
+	# This contains the coordinates in the order that the spectra are in. 
+	# Here we only need the first x and y components
+	xcoo = pl.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Xcoord'])
+	ycoo = pl.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Ycoord'])
+	# reshaping the coordinates similarly to the spectra. Need only every second coordinate
+	tempx = xcoo[0]
+	tempy = ycoo[0]
+
+	"""
+	Constructing the xarray Dataset 
+	"""
+	# stacking the forward and backward bias sweeps and using the scandir coordinate
+	# also adding specific attributes
+	xrspec = xr.Dataset(
+		data_vars = dict(
+			lia = (['bias', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
+			current = (['bias', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1))
+			),
+		coords = dict(
+			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
+			repetitions = pl.array(range(stmdata_object.repetitions)),
+			biasscandir = pl.array(['left', 'right'], dtype = 'U')
+			),
+		attrs = dict(filename = stmdata_object.filename)
+	)
+
+	xrspec.attrs['speccoord_x'] = tempx*10**9
+	xrspec.attrs['speccoord_y'] = tempy*10**9
+	xrspec.attrs['speccoord_x units'] = 'nm'
+	xrspec.attrs['speccoord_y units'] = 'nm'
 	stmdata_object.spectra = xrspec
 	return stmdata_object
 
@@ -321,7 +394,6 @@ def rescale_map(stmdata_object):
 	stmdata_object.spectra.coords['specpos_y'].attrs['units'] = 'nm'
 	stmdata_object.spectra.coords['specpos_x'].attrs['long units'] = 'nanometer'
 	stmdata_object.spectra.coords['specpos_y'].attrs['long units'] = 'nanometer'
-
 	return stmdata_object
 
 
@@ -344,7 +416,21 @@ def rescale_line(stmdata_object):
 	stmdata_object.spectra['lia'].attrs['long units'] = 'picoampere'
 	stmdata_object.spectra['current'].attrs['units'] = 'pA'
 	stmdata_object.spectra['current'].attrs['long units'] = 'picoampere'
+	return stmdata_object
 
+
+def rescale_spec(stmdata_object):
+	"""
+	rescale the xarray Dataset
+	rescale the data to nice values, nm for distances, pA for current and LIA
+	"""
+	# convert A to pA
+	stmdata_object.spectra['lia'].data = stmdata_object.spectra['lia'].data*10**12
+	stmdata_object.spectra['current'].data = stmdata_object.spectra['current'].data*10**12
+	stmdata_object.spectra['lia'].attrs['units'] = 'pA'
+	stmdata_object.spectra['lia'].attrs['long units'] = 'picoampere'
+	stmdata_object.spectra['current'].attrs['units'] = 'pA'
+	stmdata_object.spectra['current'].attrs['long units'] = 'picoampere'
 	return stmdata_object
 
 
@@ -368,7 +454,6 @@ def add_map_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
 	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
 	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
-
 	return stmdata_object
 
 
@@ -392,7 +477,29 @@ def add_line_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
 	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
 	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
+	return stmdata_object
 
+
+def add_spec_metadata(stmdata_object):
+	stmdata_object.spectra['lia'].attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
+	stmdata_object.spectra['current'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
+	stmdata_object.spectra.coords['bias'].attrs['units'] = 'V'
+	stmdata_object.spectra.coords['bias'].attrs['long units'] = 'volt'
+	stmdata_object.spectra['lia'].attrs['bias units'] = 'V'
+	stmdata_object.spectra['current'].attrs['bias units'] = 'V'
+	stmdata_object.spectra['lia'].attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra['current'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra['lia'].attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra['current'].attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra['lia'].attrs['time_per_point'] = stmdata_object.spymdata.LIA_Current.attrs['time_per_point']
+	stmdata_object.spectra['current'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
+
+	stmdata_object.spectra.attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
+	stmdata_object.spectra.attrs['bias units'] = 'V'
+	stmdata_object.spectra.attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
+	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
 	return stmdata_object
 
 
