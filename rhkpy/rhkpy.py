@@ -223,7 +223,7 @@ def xr_map(stmdata_object):
 		attrs = dict(filename = stmdata_object.filename)
 	)
 
-	stmdata_object.specmap = xrspec
+	stmdata_object.spectra = xrspec
 	return stmdata_object
 
 
@@ -298,7 +298,7 @@ def xr_line(stmdata_object):
 
 	xrspec.coords['dist'].attrs['units'] = 'nm'
 	xrspec.coords['dist'].attrs['long units'] = 'nanometer'
-	stmdata_object.specline = xrspec
+	stmdata_object.spectra = xrspec
 	return stmdata_object
 
 
@@ -308,19 +308,19 @@ def rescale_map(stmdata_object):
 	rescale the data to nice values, nm for distances, pA for current and LIA
 	"""
 	# convert meters to nm
-	stmdata_object.specmap.coords['specpos_x'] = stmdata_object.specmap.coords['specpos_x']*10**9
-	stmdata_object.specmap.coords['specpos_y'] = stmdata_object.specmap.coords['specpos_y']*10**9
+	stmdata_object.spectra.coords['specpos_x'] = stmdata_object.spectra.coords['specpos_x']*10**9
+	stmdata_object.spectra.coords['specpos_y'] = stmdata_object.spectra.coords['specpos_y']*10**9
 	# convert A to pA
-	stmdata_object.specmap['lia'].data = stmdata_object.specmap['lia'].data*10**12
-	stmdata_object.specmap['current'].data = stmdata_object.specmap['current'].data*10**12
-	stmdata_object.specmap['lia'].attrs['units'] = 'pA'
-	stmdata_object.specmap['lia'].attrs['long units'] = 'picoampere'
-	stmdata_object.specmap['current'].attrs['units'] = 'pA'
-	stmdata_object.specmap['current'].attrs['long units'] = 'picoampere'
-	stmdata_object.specmap.coords['specpos_x'].attrs['units'] = 'nm'
-	stmdata_object.specmap.coords['specpos_y'].attrs['units'] = 'nm'
-	stmdata_object.specmap.coords['specpos_x'].attrs['long units'] = 'nanometer'
-	stmdata_object.specmap.coords['specpos_y'].attrs['long units'] = 'nanometer'
+	stmdata_object.spectra['lia'].data = stmdata_object.spectra['lia'].data*10**12
+	stmdata_object.spectra['current'].data = stmdata_object.spectra['current'].data*10**12
+	stmdata_object.spectra['lia'].attrs['units'] = 'pA'
+	stmdata_object.spectra['lia'].attrs['long units'] = 'picoampere'
+	stmdata_object.spectra['current'].attrs['units'] = 'pA'
+	stmdata_object.spectra['current'].attrs['long units'] = 'picoampere'
+	stmdata_object.spectra.coords['specpos_x'].attrs['units'] = 'nm'
+	stmdata_object.spectra.coords['specpos_y'].attrs['units'] = 'nm'
+	stmdata_object.spectra.coords['specpos_x'].attrs['long units'] = 'nanometer'
+	stmdata_object.spectra.coords['specpos_y'].attrs['long units'] = 'nanometer'
 
 	return stmdata_object
 
@@ -331,67 +331,67 @@ def rescale_line(stmdata_object):
 	rescale the data to nice values, nm for distances, pA for current and LIA
 	"""
 	# convert meters to nm
-	stmdata_object.specline['speccoord_x'].data = stmdata_object.specline['speccoord_x'].data*10**9
-	stmdata_object.specline['speccoord_y'].data = stmdata_object.specline['speccoord_y'].data*10**9
-	stmdata_object.specline['speccoord_x'].attrs['units'] = 'nm'
-	stmdata_object.specline['speccoord_y'].attrs['units'] = 'nm'
-	stmdata_object.specline['speccoord_x'].attrs['long units'] = 'nanometer'
-	stmdata_object.specline['speccoord_y'].attrs['long units'] = 'nanometer'
+	stmdata_object.spectra['speccoord_x'].data = stmdata_object.spectra['speccoord_x'].data*10**9
+	stmdata_object.spectra['speccoord_y'].data = stmdata_object.spectra['speccoord_y'].data*10**9
+	stmdata_object.spectra['speccoord_x'].attrs['units'] = 'nm'
+	stmdata_object.spectra['speccoord_y'].attrs['units'] = 'nm'
+	stmdata_object.spectra['speccoord_x'].attrs['long units'] = 'nanometer'
+	stmdata_object.spectra['speccoord_y'].attrs['long units'] = 'nanometer'
 	# convert A to pA
-	stmdata_object.specline['lia'].data = stmdata_object.specline['lia'].data*10**12
-	stmdata_object.specline['current'].data = stmdata_object.specline['current'].data*10**12
-	stmdata_object.specline['lia'].attrs['units'] = 'pA'
-	stmdata_object.specline['lia'].attrs['long units'] = 'picoampere'
-	stmdata_object.specline['current'].attrs['units'] = 'pA'
-	stmdata_object.specline['current'].attrs['long units'] = 'picoampere'
+	stmdata_object.spectra['lia'].data = stmdata_object.spectra['lia'].data*10**12
+	stmdata_object.spectra['current'].data = stmdata_object.spectra['current'].data*10**12
+	stmdata_object.spectra['lia'].attrs['units'] = 'pA'
+	stmdata_object.spectra['lia'].attrs['long units'] = 'picoampere'
+	stmdata_object.spectra['current'].attrs['units'] = 'pA'
+	stmdata_object.spectra['current'].attrs['long units'] = 'picoampere'
 
 	return stmdata_object
 
 
 def add_map_metadata(stmdata_object):
-	stmdata_object.specmap['lia'].attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
-	stmdata_object.specmap['current'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
-	stmdata_object.specmap.coords['bias'].attrs['units'] = 'V'
-	stmdata_object.specmap.coords['bias'].attrs['long units'] = 'volt'
-	stmdata_object.specmap['lia'].attrs['bias units'] = 'V'
-	stmdata_object.specmap['current'].attrs['bias units'] = 'V'
-	stmdata_object.specmap['lia'].attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
-	stmdata_object.specmap['current'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
-	stmdata_object.specmap['lia'].attrs['setpoint units'] = 'pA'
-	stmdata_object.specmap['current'].attrs['setpoint units'] = 'pA'
-	stmdata_object.specmap['lia'].attrs['time_per_point'] = stmdata_object.spymdata.LIA_Current.attrs['time_per_point']
-	stmdata_object.specmap['current'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
+	stmdata_object.spectra['lia'].attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
+	stmdata_object.spectra['current'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
+	stmdata_object.spectra.coords['bias'].attrs['units'] = 'V'
+	stmdata_object.spectra.coords['bias'].attrs['long units'] = 'volt'
+	stmdata_object.spectra['lia'].attrs['bias units'] = 'V'
+	stmdata_object.spectra['current'].attrs['bias units'] = 'V'
+	stmdata_object.spectra['lia'].attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra['current'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra['lia'].attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra['current'].attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra['lia'].attrs['time_per_point'] = stmdata_object.spymdata.LIA_Current.attrs['time_per_point']
+	stmdata_object.spectra['current'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
 
-	stmdata_object.specmap.attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
-	stmdata_object.specmap.attrs['bias units'] = 'V'
-	stmdata_object.specmap.attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
-	stmdata_object.specmap.attrs['setpoint units'] = 'pA'
-	stmdata_object.specmap.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
-	stmdata_object.specmap.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
+	stmdata_object.spectra.attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
+	stmdata_object.spectra.attrs['bias units'] = 'V'
+	stmdata_object.spectra.attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
+	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
 
 	return stmdata_object
 
 
 def add_line_metadata(stmdata_object):
-	stmdata_object.specline['lia'].attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
-	stmdata_object.specline['current'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
-	stmdata_object.specline.coords['bias'].attrs['units'] = 'V'
-	stmdata_object.specline.coords['bias'].attrs['long units'] = 'volt'
-	stmdata_object.specline['lia'].attrs['bias units'] = 'V'
-	stmdata_object.specline['current'].attrs['bias units'] = 'V'
-	stmdata_object.specline['lia'].attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
-	stmdata_object.specline['current'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
-	stmdata_object.specline['lia'].attrs['setpoint units'] = 'pA'
-	stmdata_object.specline['current'].attrs['setpoint units'] = 'pA'
-	stmdata_object.specline['lia'].attrs['time_per_point'] = stmdata_object.spymdata.LIA_Current.attrs['time_per_point']
-	stmdata_object.specline['current'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
+	stmdata_object.spectra['lia'].attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
+	stmdata_object.spectra['current'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
+	stmdata_object.spectra.coords['bias'].attrs['units'] = 'V'
+	stmdata_object.spectra.coords['bias'].attrs['long units'] = 'volt'
+	stmdata_object.spectra['lia'].attrs['bias units'] = 'V'
+	stmdata_object.spectra['current'].attrs['bias units'] = 'V'
+	stmdata_object.spectra['lia'].attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra['current'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra['lia'].attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra['current'].attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra['lia'].attrs['time_per_point'] = stmdata_object.spymdata.LIA_Current.attrs['time_per_point']
+	stmdata_object.spectra['current'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
 
-	stmdata_object.specline.attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
-	stmdata_object.specline.attrs['bias units'] = 'V'
-	stmdata_object.specline.attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
-	stmdata_object.specline.attrs['setpoint units'] = 'pA'
-	stmdata_object.specline.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
-	stmdata_object.specline.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
+	stmdata_object.spectra.attrs['bias'] = stmdata_object.spymdata.LIA_Current.attrs['bias']
+	stmdata_object.spectra.attrs['bias units'] = 'V'
+	stmdata_object.spectra.attrs['setpoint'] = stmdata_object.spymdata.LIA_Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
+	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
 
 	return stmdata_object
 
