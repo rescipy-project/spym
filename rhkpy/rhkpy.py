@@ -12,7 +12,7 @@ class stmdata:
 	repetitions: the number of spectra in each physical position of the tip
 	alternate: True if forward and backward bias sweeps are turned on, False if not
 	"""
-	def __init__(self, filename, repetitions = 1, alternate = True, datatype = 'map', **kwargs):
+	def __init__(self, filename, repetitions = 1, alternate = True, datatype = 'none', **kwargs):
 		# check if parameters passed to the class are valid
 		if repetitions <= 0:
 			print("repetitions needs to be an integer, with a value of 1 or above. Default is 1")
@@ -22,17 +22,11 @@ class stmdata:
 		if isinstance(alternate, bool) == False:
 			print("alternate needs to be a bool variable: True or False. Default is True")
 
-		if (datatype != 'map') and (datatype != 'line') and (datatype != 'spec') and (datatype != 'image'):
-			print('datatype must be either: map, line, spec or image')
-			return
-
-
 		self.filename = filename
 		# number of spectra at a tip position
 		self.repetitions = repetitions
 		# Boolean value, True if alternate scan directions is turned on
 		self.alternate = alternate
-		self.datatype = datatype
 
 		# Load the data using spym
 		self.spymdata = load_spym(self.filename)
@@ -41,8 +35,15 @@ class stmdata:
 		if self.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
 			print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
 
-		# check type of data contained in the file
-		self.datatype, self.spectype = checkdatatype(self)
+		# check type of data contained in the file, if no type is specified
+		if datatype == 'none':
+			self.datatype, self.spectype = checkdatatype(self)
+		else:
+			if (datatype != 'map') and (datatype != 'line') and (datatype != 'spec') and (datatype != 'image'):
+				print('datatype must be either: map, line, spec or image')
+				return
+			else:
+				self.datatype = datatype
 
 		# if the file contains spectroscopy map
 		if self.datatype == 'map':
