@@ -128,7 +128,7 @@ def load_line(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
 
-	# decide if it's a dI/dV or I(z) map
+	# decide if it's a dI/dV or I(z) line
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
 		stmdata_object = xr_line(stmdata_object)
@@ -150,7 +150,7 @@ def load_spec(stmdata_object):
 	stmdata_object.repetitions = int(stmdata_object.spymdata.LIA_Current.data.shape[1] / 2)
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
 
-	# decide if it's a dI/dV or I(z) map
+	# decide if it's a dI/dV or I(z) spec
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
 		stmdata_object = xr_spec(stmdata_object)
