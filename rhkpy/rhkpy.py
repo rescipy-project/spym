@@ -4,6 +4,9 @@ import numpy as np
 import spym
 ## Using the old loader
 from spym.io import rhksm4
+## flatten and plane fitting
+from spym.process.level import align
+from spym.process.level import plane
 
 class stmdata:
 	"""
@@ -45,7 +48,7 @@ class stmdata:
 			else:
 				self.datatype = datatype
 
-		# if the file contains spectroscopy map
+		# load data into xarray, for all data types
 		if self.datatype == 'map':
 			self = load_specmap(self)
 		elif self.datatype == 'line':
@@ -110,6 +113,9 @@ def load_specmap(stmdata_object):
 	stmdata_object = rescale_map(stmdata_object)
 	# add metadata to the xarray
 	stmdata_object = add_map_metadata(stmdata_object)
+
+	# also load the image
+	stmdata_object = load_image(stmdata_object)
 	return stmdata_object
 
 
@@ -122,6 +128,9 @@ def load_line(stmdata_object):
 	stmdata_object = rescale_line(stmdata_object)
 	# add metadata to the xarray
 	stmdata_object = add_line_metadata(stmdata_object)
+
+	# also load the image
+	stmdata_object = load_image(stmdata_object)
 	return stmdata_object
 
 
@@ -140,6 +149,12 @@ def load_spec(stmdata_object):
 
 
 def load_image(stmdata_object):
+	# load the image data
+	stmdata_object = xr_image(stmdata_object)
+	# rescale dimensions
+	stmdata_object = rescale_image(stmdata_object)
+	# add metadata
+	stmdata_object = add_image_metadata(stmdata_object)
 	return stmdata_object
 
 
@@ -375,6 +390,59 @@ def xr_spec(stmdata_object):
 	return stmdata_object
 
 
+def xr_image(stmdata_object):
+	# topography
+	topofw = stmdata_object.spymdata.Topography_Forward
+	topobw = stmdata_object.spymdata.Topography_Backward
+	
+	# Load image data
+	# use spym to align (flatten the data) and planefit
+	topofw, bg = align(topofw, baseline='median')
+	topobw, bg = align(topobw, baseline='median')
+	topofw, bg = plane(topofw)
+	topobw, bg = plane(topobw)
+	# current
+	currfw = stmdata_object.spymdata.Current_Forward
+	currbw = stmdata_object.spymdata.Current_Backward
+	# lia
+	liafw = stmdata_object.spymdata.LIA_Current_Forward
+	liabw = stmdata_object.spymdata.LIA_Current_Backward
+
+	# coordinates
+	# absolute values should be found by adding the X Y offsets
+	xoff = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Xoffset']
+	yoff = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Yoffset']
+
+	xx = stmdata_object.spymdata.Topography_Forward_x.data
+	yy = stmdata_object.spymdata.Topography_Forward_y.data
+
+	"""
+	create xarray Dataset of the image data
+	"""
+	xrimage = xr.Dataset(
+		data_vars = dict(
+			topography = (['x', 'y', 'scandir'], pl.stack((topofw.data, topobw.data), axis=-1)),
+			current = (['x', 'y', 'scandir'], pl.stack((currfw.data, currbw.data), axis=-1)),
+			lia = (['x', 'y', 'scandir'], pl.stack((liafw.data, liabw.data), axis=-1))
+			),
+		coords = dict(
+			x = xx,
+			y = yy,
+			scandir = pl.array(['forward', 'backward'])
+			),
+		attrs = dict(
+			filename = stmdata_object.filename,
+			xoffset = xoff,
+			yoffset = yoff,
+			xoffset_units = 'nm',
+			yoffset_units = 'nm'
+			)
+		)
+	
+	stmdata_object.image = xrimage
+	return stmdata_object
+
+
 def rescale_map(stmdata_object):
 	"""
 	rescale the xarray Dataset
@@ -431,6 +499,31 @@ def rescale_spec(stmdata_object):
 	stmdata_object.spectra['lia'].attrs['long units'] = 'picoampere'
 	stmdata_object.spectra['current'].attrs['units'] = 'pA'
 	stmdata_object.spectra['current'].attrs['long units'] = 'picoampere'
+	return stmdata_object
+
+
+def rescale_image(stmdata_object):
+	"""
+	rescale the xarray Dataset
+	rescale the data to nice values, nm for distances, pA for current and LIA
+	"""
+	# convert meters to nm
+	stmdata_object.image.coords['x'] = stmdata_object.image.coords['x']*10**9
+	stmdata_object.image.coords['y'] = stmdata_object.image.coords['y']*10**9
+	stmdata_object.image['topography'].data = stmdata_object.image['topography'].data*10**9
+	stmdata_object.image['topography'].attrs['units'] = 'nm'
+	stmdata_object.image['topography'].attrs['long units'] = 'nanometer'
+	# convert A to pA
+	stmdata_object.image['lia'].data = stmdata_object.image['lia'].data*10**12
+	stmdata_object.image['current'].data = stmdata_object.image['current'].data*10**12
+	stmdata_object.image['lia'].attrs['units'] = 'pA'
+	stmdata_object.image['lia'].attrs['long units'] = 'picoampere'
+	stmdata_object.image['current'].attrs['units'] = 'pA'
+	stmdata_object.image['current'].attrs['long units'] = 'picoampere'
+	stmdata_object.image.coords['x'].attrs['units'] = 'nm'
+	stmdata_object.image.coords['y'].attrs['units'] = 'nm'
+	stmdata_object.image.coords['x'].attrs['long units'] = 'nanometer'
+	stmdata_object.image.coords['y'].attrs['long units'] = 'nanometer'
 	return stmdata_object
 
 
@@ -500,6 +593,16 @@ def add_spec_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
 	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
 	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
+	return stmdata_object
+
+
+def add_image_metadata(stmdata_object):
+	stmdata_object.image.attrs['bias'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Bias']
+	stmdata_object.image.attrs['bias units'] = 'V'
+	stmdata_object.image.attrs['setpoint'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Current']*10**12
+	stmdata_object.image.attrs['setpoint units'] = 'pA'
+	stmdata_object.image.attrs['measurement date'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Date']
+	stmdata_object.image.attrs['measurement time'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Time']
 	return stmdata_object
 
 
