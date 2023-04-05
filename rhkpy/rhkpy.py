@@ -228,6 +228,8 @@ def xr_map(stmdata_object):
 	ycoo = pl.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Ycoord'])
 	# reshaping the coordinates similarly to the spectra. This is a coordinates mesh
 	# at the end slicing the arrays to get the X, Y coordinates, we don't need the mesh
+	meshx = pl.reshape(xcoo, (mapsize, mapsize, numberofspectra), order='C')[:, :, 0]
+	meshy = pl.reshape(ycoo, (mapsize, mapsize, numberofspectra), order='C')[:, :, 0]
 	tempx = pl.reshape(xcoo, (mapsize, mapsize, numberofspectra), order='C')[0, :, 0]
 	tempy = pl.reshape(ycoo, (mapsize, mapsize, numberofspectra), order='C')[:, 0, 0]
 
@@ -239,7 +241,9 @@ def xr_map(stmdata_object):
 	xrspec = xr.Dataset(
 		data_vars = dict(
 			lia = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
-			current = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1))
+			current = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)),
+			x = (['specpos_x', 'specpos_y'], meshx*10**9),
+			y = (['specpos_x', 'specpos_y'], meshy*10**9)
 			),
 		coords = dict(
 			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
@@ -314,8 +318,8 @@ def xr_line(stmdata_object):
 		data_vars = dict(
 			lia = (['bias', 'dist', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
 			current = (['bias', 'dist', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)),
-			speccoord_x = (['dist'], tempx),
-			speccoord_y = (['dist'], tempy)
+			x = (['dist'], tempx*10**9),
+			y = (['dist'], tempy*10**9)
 			),
 		coords = dict(
 			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
@@ -416,6 +420,12 @@ def xr_image(stmdata_object):
 	xx = stmdata_object.spymdata.Topography_Forward_x.data
 	yy = stmdata_object.spymdata.Topography_Forward_y.data
 
+	# the offset refers to the corner of the image, so we need to account for that
+	xlength = abs(xx[-1] - xx[0])
+	ylength = abs(yy[-1] - yy[0])
+	xoff -= xlength/2
+	yoff -= ylength/2
+
 	"""
 	create xarray Dataset of the image data
 	"""
@@ -470,13 +480,10 @@ def rescale_line(stmdata_object):
 	rescale the xarray Dataset
 	rescale the data to nice values, nm for distances, pA for current and LIA
 	"""
-	# convert meters to nm
-	stmdata_object.spectra['speccoord_x'].data = stmdata_object.spectra['speccoord_x'].data*10**9
-	stmdata_object.spectra['speccoord_y'].data = stmdata_object.spectra['speccoord_y'].data*10**9
-	stmdata_object.spectra['speccoord_x'].attrs['units'] = 'nm'
-	stmdata_object.spectra['speccoord_y'].attrs['units'] = 'nm'
-	stmdata_object.spectra['speccoord_x'].attrs['long units'] = 'nanometer'
-	stmdata_object.spectra['speccoord_y'].attrs['long units'] = 'nanometer'
+	stmdata_object.spectra['x'].attrs['units'] = 'nm'
+	stmdata_object.spectra['y'].attrs['units'] = 'nm'
+	stmdata_object.spectra['x'].attrs['long units'] = 'nanometer'
+	stmdata_object.spectra['y'].attrs['long units'] = 'nanometer'
 	# convert A to pA
 	stmdata_object.spectra['lia'].data = stmdata_object.spectra['lia'].data*10**12
 	stmdata_object.spectra['current'].data = stmdata_object.spectra['current'].data*10**12
