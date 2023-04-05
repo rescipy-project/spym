@@ -107,30 +107,40 @@ def aspect_ratio(x, y):
 def load_specmap(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
-	# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-	stmdata_object = xr_map(stmdata_object)
-	# rescale the dimensions to nice values
-	stmdata_object = rescale_map(stmdata_object)
-	# add metadata to the xarray
-	stmdata_object = add_map_metadata(stmdata_object)
 
-	# also load the image
-	stmdata_object = load_image(stmdata_object)
+	# decide if it's a dI/dV or I(z) map
+	if stmdata_object.spectype == 'iv':
+		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
+		stmdata_object = xr_map(stmdata_object)
+		# rescale the dimensions to nice values
+		stmdata_object = rescale_map(stmdata_object)
+		# add metadata to the xarray
+		stmdata_object = add_map_metadata(stmdata_object)
+
+		# also load the image
+		stmdata_object = load_image(stmdata_object)
+	elif stmdata_object.spectype == 'iz':
+		return
 	return stmdata_object
 
 
 def load_line(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
-	# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-	stmdata_object = xr_line(stmdata_object)
-	# rescale the dimensions to nice values
-	stmdata_object = rescale_line(stmdata_object)
-	# add metadata to the xarray
-	stmdata_object = add_line_metadata(stmdata_object)
 
-	# also load the image
-	stmdata_object = load_image(stmdata_object)
+	# decide if it's a dI/dV or I(z) map
+	if stmdata_object.spectype == 'iv':
+		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
+		stmdata_object = xr_line(stmdata_object)
+		# rescale the dimensions to nice values
+		stmdata_object = rescale_line(stmdata_object)
+		# add metadata to the xarray
+		stmdata_object = add_line_metadata(stmdata_object)
+
+		# also load the image
+		stmdata_object = load_image(stmdata_object)
+	elif stmdata_object.spectype == 'iz':
+		return
 	return stmdata_object
 
 
@@ -139,12 +149,17 @@ def load_spec(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.repetitions = int(stmdata_object.spymdata.LIA_Current.data.shape[1] / 2)
 	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
-	# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-	stmdata_object = xr_spec(stmdata_object)
-	# rescale the dimensions to nice values
-	stmdata_object = rescale_spec(stmdata_object)
-	# add metadata to the xarray
-	stmdata_object = add_spec_metadata(stmdata_object)
+
+	# decide if it's a dI/dV or I(z) map
+	if stmdata_object.spectype == 'iv':
+		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
+		stmdata_object = xr_spec(stmdata_object)
+		# rescale the dimensions to nice values
+		stmdata_object = rescale_spec(stmdata_object)
+		# add metadata to the xarray
+		stmdata_object = add_spec_metadata(stmdata_object)
+	elif stmdata_object.spectype == 'iz':
+		return
 	return stmdata_object
 
 
