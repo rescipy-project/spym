@@ -111,7 +111,7 @@ def load_specmap(stmdata_object):
 	# decide if it's a dI/dV or I(z) map
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-		stmdata_object = xr_map(stmdata_object)
+		stmdata_object = xr_map_iv(stmdata_object)
 		# rescale the dimensions to nice values
 		stmdata_object = rescale_map(stmdata_object)
 		# add metadata to the xarray
@@ -131,7 +131,7 @@ def load_line(stmdata_object):
 	# decide if it's a dI/dV or I(z) line
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-		stmdata_object = xr_line(stmdata_object)
+		stmdata_object = xr_line_iv(stmdata_object)
 		# rescale the dimensions to nice values
 		stmdata_object = rescale_line(stmdata_object)
 		# add metadata to the xarray
@@ -153,7 +153,7 @@ def load_spec(stmdata_object):
 	# decide if it's a dI/dV or I(z) spec
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-		stmdata_object = xr_spec(stmdata_object)
+		stmdata_object = xr_spec_iv(stmdata_object)
 		# rescale the dimensions to nice values
 		stmdata_object = rescale_spec(stmdata_object)
 		# add metadata to the xarray
@@ -173,7 +173,7 @@ def load_image(stmdata_object):
 	return stmdata_object
 
 
-def xr_map(stmdata_object):
+def xr_map_iv(stmdata_object):
 	"""
 	!!!!! ISSUE: need to change spectrum rearranging for the case where alternate is False
 
@@ -274,7 +274,7 @@ def xr_map(stmdata_object):
 	return stmdata_object
 
 
-def xr_line(stmdata_object):
+def xr_line_iv(stmdata_object):
 	"""
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions as coordinates
@@ -351,7 +351,7 @@ def xr_line(stmdata_object):
 	return stmdata_object
 
 
-def xr_spec(stmdata_object):
+def xr_spec_iv(stmdata_object):
 	"""
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions are in the attributes
