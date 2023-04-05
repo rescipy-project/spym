@@ -426,14 +426,14 @@ def xr_image(stmdata_object):
 			lia = (['x', 'y', 'scandir'], pl.stack((liafw.data, liabw.data), axis=-1))
 			),
 		coords = dict(
-			x = xx,
-			y = yy,
+			x = xx + xoff,
+			y = yy + yoff,
 			scandir = pl.array(['forward', 'backward'])
 			),
 		attrs = dict(
 			filename = stmdata_object.filename,
-			xoffset = xoff,
-			yoffset = yoff,
+			xoffset = xoff*10**9,
+			yoffset = yoff*10**9,
 			xoffset_units = 'nm',
 			yoffset_units = 'nm'
 			)
