@@ -269,6 +269,7 @@ def xr_map_iv(stmdata_object):
 	xrspec['x'].attrs['long units'] = 'nanometer'
 	xrspec['y'].attrs['units'] = 'nm'
 	xrspec['y'].attrs['long units'] = 'nanometer'
+	xrspec.coords['bias'].attrs['units'] = 'V'
 	xrspec.coords['specpos_x'].attrs['units'] = 'nm'
 	xrspec.coords['specpos_y'].attrs['units'] = 'nm'
 	xrspec.coords['specpos_x'].attrs['long units'] = 'nanometer'
