@@ -114,8 +114,6 @@ def load_specmap(stmdata_object):
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
 		stmdata_object = xr_map_iv(stmdata_object)
-		# rescale the dimensions to nice values
-		stmdata_object = rescale_map(stmdata_object)
 		# add metadata to the xarray
 		stmdata_object = add_map_metadata(stmdata_object)
 	elif stmdata_object.spectype == 'iz':
@@ -134,8 +132,6 @@ def load_line(stmdata_object):
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
 		stmdata_object = xr_line_iv(stmdata_object)
-		# rescale the dimensions to nice values
-		stmdata_object = rescale_line(stmdata_object)
 		# add metadata to the xarray
 		stmdata_object = add_line_metadata(stmdata_object)
 	elif stmdata_object.spectype == 'iz':
@@ -154,8 +150,6 @@ def load_spec(stmdata_object):
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
 		stmdata_object = xr_spec_iv(stmdata_object)
-		# rescale the dimensions to nice values
-		stmdata_object = rescale_spec(stmdata_object)
 		# add metadata to the xarray
 		stmdata_object = add_spec_metadata(stmdata_object)
 	elif stmdata_object.spectype == 'iz':
@@ -169,8 +163,6 @@ def load_spec(stmdata_object):
 def load_image(stmdata_object):
 	# load the image data
 	stmdata_object = xr_image(stmdata_object)
-	# rescale dimensions
-	stmdata_object = rescale_image(stmdata_object)
 	# add metadata
 	stmdata_object = add_image_metadata(stmdata_object)
 	return stmdata_object
@@ -258,20 +250,33 @@ def xr_map_iv(stmdata_object):
 	# also adding specific attributes
 	xrspec = xr.Dataset(
 		data_vars = dict(
-			lia = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
-			current = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)),
+			lia = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)*10**12),
+			current = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)*10**12),
 			x = (['specpos_x', 'specpos_y'], meshx*10**9),
 			y = (['specpos_x', 'specpos_y'], meshy*10**9)
 			),
 		coords = dict(
 			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
-			specpos_x = tempx,
-			specpos_y = tempy,
+			specpos_x = tempx*10**9,
+			specpos_y = tempy*10**9,
 			repetitions = pl.array(range(stmdata_object.repetitions)),
 			biasscandir = pl.array(['left', 'right'], dtype = 'U')
 			),
 		attrs = dict(filename = stmdata_object.filename)
 	)
+
+	xrspec['lia'].attrs['units'] = 'pA'
+	xrspec['lia'].attrs['long units'] = 'picoampere'
+	xrspec['current'].attrs['units'] = 'pA'
+	xrspec['current'].attrs['long units'] = 'picoampere'
+	xrspec['x'].attrs['units'] = 'nm'
+	xrspec['x'].attrs['long units'] = 'nanometer'
+	xrspec['y'].attrs['units'] = 'nm'
+	xrspec['y'].attrs['long units'] = 'nanometer'
+	xrspec.coords['specpos_x'].attrs['units'] = 'nm'
+	xrspec.coords['specpos_y'].attrs['units'] = 'nm'
+	xrspec.coords['specpos_x'].attrs['long units'] = 'nanometer'
+	xrspec.coords['specpos_y'].attrs['long units'] = 'nanometer'
 
 	stmdata_object.spectra = xrspec
 	return stmdata_object
@@ -334,8 +339,8 @@ def xr_line_iv(stmdata_object):
 	# also adding specific attributes
 	xrspec = xr.Dataset(
 		data_vars = dict(
-			lia = (['bias', 'dist', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
-			current = (['bias', 'dist', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)),
+			lia = (['bias', 'dist', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)*10**12),
+			current = (['bias', 'dist', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)*10**12),
 			x = (['dist'], tempx*10**9),
 			y = (['dist'], tempy*10**9)
 			),
@@ -350,6 +355,16 @@ def xr_line_iv(stmdata_object):
 
 	xrspec.coords['dist'].attrs['units'] = 'nm'
 	xrspec.coords['dist'].attrs['long units'] = 'nanometer'
+
+	xrspec['x'].attrs['units'] = 'nm'
+	xrspec['y'].attrs['units'] = 'nm'
+	xrspec['x'].attrs['long units'] = 'nanometer'
+	xrspec['y'].attrs['long units'] = 'nanometer'
+	xrspec['lia'].attrs['units'] = 'pA'
+	xrspec['lia'].attrs['long units'] = 'picoampere'
+	xrspec['current'].attrs['units'] = 'pA'
+	xrspec['current'].attrs['long units'] = 'picoampere'
+
 	stmdata_object.spectra = xrspec
 	return stmdata_object
 
@@ -393,8 +408,8 @@ def xr_spec_iv(stmdata_object):
 	# also adding specific attributes
 	xrspec = xr.Dataset(
 		data_vars = dict(
-			lia = (['bias', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)),
-			current = (['bias', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1))
+			lia = (['bias', 'repetitions', 'biasscandir'], pl.stack((liafw, liabw), axis=-1)*10**12),
+			current = (['bias', 'repetitions', 'biasscandir'], pl.stack((currentfw, currentbw), axis=-1)*10**12)
 			),
 		coords = dict(
 			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
@@ -408,6 +423,12 @@ def xr_spec_iv(stmdata_object):
 	xrspec.attrs['speccoord_y'] = tempy*10**9
 	xrspec.attrs['speccoord_x units'] = 'nm'
 	xrspec.attrs['speccoord_y units'] = 'nm'
+
+	xrspec['lia'].attrs['units'] = 'pA'
+	xrspec['lia'].attrs['long units'] = 'picoampere'
+	xrspec['current'].attrs['units'] = 'pA'
+	xrspec['current'].attrs['long units'] = 'picoampere'
+
 	stmdata_object.spectra = xrspec
 	return stmdata_object
 
@@ -504,13 +525,13 @@ def xr_image(stmdata_object):
 	"""
 	xrimage = xr.Dataset(
 		data_vars = dict(
-			topography = (['x', 'y', 'scandir'], pl.stack((topofw.data, topobw.data), axis=-1)),
-			current = (['x', 'y', 'scandir'], pl.stack((currfw.data, currbw.data), axis=-1)),
-			lia = (['x', 'y', 'scandir'], pl.stack((liafw.data, liabw.data), axis=-1))
+			topography = (['x', 'y', 'scandir'], pl.stack((topofw.data, topobw.data), axis=-1)*10**9),
+			current = (['x', 'y', 'scandir'], pl.stack((currfw.data, currbw.data), axis=-1)*10**12),
+			lia = (['x', 'y', 'scandir'], pl.stack((liafw.data, liabw.data), axis=-1)*10**12)
 			),
 		coords = dict(
-			x = xx + xoff,
-			y = yy + yoff,
+			x = (xx + xoff)*10**9,
+			y = (yy + yoff)*10**9,
 			scandir = pl.array(['forward', 'backward'])
 			),
 		attrs = dict(
@@ -522,88 +543,18 @@ def xr_image(stmdata_object):
 			)
 		)
 	
+	xrimage['topography'].attrs['units'] = 'nm'
+	xrimage['topography'].attrs['long units'] = 'nanometer'
+	xrimage['lia'].attrs['units'] = 'pA'
+	xrimage['lia'].attrs['long units'] = 'picoampere'
+	xrimage['current'].attrs['units'] = 'pA'
+	xrimage['current'].attrs['long units'] = 'picoampere'
+	xrimage.coords['x'].attrs['units'] = 'nm'
+	xrimage.coords['y'].attrs['units'] = 'nm'
+	xrimage.coords['x'].attrs['long units'] = 'nanometer'
+	xrimage.coords['y'].attrs['long units'] = 'nanometer'
+
 	stmdata_object.image = xrimage
-	return stmdata_object
-
-
-def rescale_map(stmdata_object):
-	"""
-	rescale the xarray Dataset
-	rescale the data to nice values, nm for distances, pA for current and LIA
-	"""
-	# convert meters to nm
-	stmdata_object.spectra.coords['specpos_x'] = stmdata_object.spectra.coords['specpos_x']*10**9
-	stmdata_object.spectra.coords['specpos_y'] = stmdata_object.spectra.coords['specpos_y']*10**9
-	# convert A to pA
-	stmdata_object.spectra['lia'].data = stmdata_object.spectra['lia'].data*10**12
-	stmdata_object.spectra['current'].data = stmdata_object.spectra['current'].data*10**12
-	stmdata_object.spectra['lia'].attrs['units'] = 'pA'
-	stmdata_object.spectra['lia'].attrs['long units'] = 'picoampere'
-	stmdata_object.spectra['current'].attrs['units'] = 'pA'
-	stmdata_object.spectra['current'].attrs['long units'] = 'picoampere'
-	stmdata_object.spectra.coords['specpos_x'].attrs['units'] = 'nm'
-	stmdata_object.spectra.coords['specpos_y'].attrs['units'] = 'nm'
-	stmdata_object.spectra.coords['specpos_x'].attrs['long units'] = 'nanometer'
-	stmdata_object.spectra.coords['specpos_y'].attrs['long units'] = 'nanometer'
-	return stmdata_object
-
-
-def rescale_line(stmdata_object):
-	"""
-	rescale the xarray Dataset
-	rescale the data to nice values, nm for distances, pA for current and LIA
-	"""
-	stmdata_object.spectra['x'].attrs['units'] = 'nm'
-	stmdata_object.spectra['y'].attrs['units'] = 'nm'
-	stmdata_object.spectra['x'].attrs['long units'] = 'nanometer'
-	stmdata_object.spectra['y'].attrs['long units'] = 'nanometer'
-	# convert A to pA
-	stmdata_object.spectra['lia'].data = stmdata_object.spectra['lia'].data*10**12
-	stmdata_object.spectra['current'].data = stmdata_object.spectra['current'].data*10**12
-	stmdata_object.spectra['lia'].attrs['units'] = 'pA'
-	stmdata_object.spectra['lia'].attrs['long units'] = 'picoampere'
-	stmdata_object.spectra['current'].attrs['units'] = 'pA'
-	stmdata_object.spectra['current'].attrs['long units'] = 'picoampere'
-	return stmdata_object
-
-
-def rescale_spec(stmdata_object):
-	"""
-	rescale the xarray Dataset
-	rescale the data to nice values, nm for distances, pA for current and LIA
-	"""
-	# convert A to pA
-	stmdata_object.spectra['lia'].data = stmdata_object.spectra['lia'].data*10**12
-	stmdata_object.spectra['current'].data = stmdata_object.spectra['current'].data*10**12
-	stmdata_object.spectra['lia'].attrs['units'] = 'pA'
-	stmdata_object.spectra['lia'].attrs['long units'] = 'picoampere'
-	stmdata_object.spectra['current'].attrs['units'] = 'pA'
-	stmdata_object.spectra['current'].attrs['long units'] = 'picoampere'
-	return stmdata_object
-
-
-def rescale_image(stmdata_object):
-	"""
-	rescale the xarray Dataset
-	rescale the data to nice values, nm for distances, pA for current and LIA
-	"""
-	# convert meters to nm
-	stmdata_object.image.coords['x'] = stmdata_object.image.coords['x']*10**9
-	stmdata_object.image.coords['y'] = stmdata_object.image.coords['y']*10**9
-	stmdata_object.image['topography'].data = stmdata_object.image['topography'].data*10**9
-	stmdata_object.image['topography'].attrs['units'] = 'nm'
-	stmdata_object.image['topography'].attrs['long units'] = 'nanometer'
-	# convert A to pA
-	stmdata_object.image['lia'].data = stmdata_object.image['lia'].data*10**12
-	stmdata_object.image['current'].data = stmdata_object.image['current'].data*10**12
-	stmdata_object.image['lia'].attrs['units'] = 'pA'
-	stmdata_object.image['lia'].attrs['long units'] = 'picoampere'
-	stmdata_object.image['current'].attrs['units'] = 'pA'
-	stmdata_object.image['current'].attrs['long units'] = 'picoampere'
-	stmdata_object.image.coords['x'].attrs['units'] = 'nm'
-	stmdata_object.image.coords['y'].attrs['units'] = 'nm'
-	stmdata_object.image.coords['x'].attrs['long units'] = 'nanometer'
-	stmdata_object.image.coords['y'].attrs['long units'] = 'nanometer'
 	return stmdata_object
 
 
