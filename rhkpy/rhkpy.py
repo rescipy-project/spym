@@ -106,7 +106,7 @@ def aspect_ratio(x, y):
 
 def load_specmap(stmdata_object):
 	# total number of spectra in one postion of the tip
-	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
+	stmdata_object.numberofspectra = int((stmdata_object.alternate + 1)*stmdata_object.repetitions)
 	# load the image
 	stmdata_object = load_image(stmdata_object)
 
@@ -119,25 +119,24 @@ def load_specmap(stmdata_object):
 	elif stmdata_object.spectype == 'iz':
 		# create xarray Dataset
 		stmdata_object = xr_map_iz(stmdata_object)
-
+		# add metadata to the xarray
+		stmdata_object = add_map_metadata(stmdata_object)
 	return stmdata_object
 
 
 def load_line(stmdata_object):
 	# total number of spectra in one postion of the tip
-	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
+	stmdata_object.numberofspectra = int((stmdata_object.alternate + 1)*stmdata_object.repetitions)
 	# load the image data
 	stmdata_object = load_image(stmdata_object)
 
 	# decide if it's a dI/dV or I(z) line
 	if stmdata_object.spectype == 'iv':
-		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
 		stmdata_object = xr_line_iv(stmdata_object)
-		# add metadata to the xarray
 		stmdata_object = add_line_metadata(stmdata_object)
 	elif stmdata_object.spectype == 'iz':
-		return
-
+		stmdata_object = xr_line_iz(stmdata_object)
+		stmdata_object = add_spec_metadata(stmdata_object)
 	return stmdata_object
 
 
@@ -145,18 +144,14 @@ def load_spec(stmdata_object):
 	# in this case the total number of spectra can be inferred
 	# total number of spectra in one postion of the tip
 	stmdata_object.repetitions = int(stmdata_object.spymdata.Current.data.shape[1] / (stmdata_object.alternate + 1))
-	stmdata_object.numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
+	stmdata_object.numberofspectra = int((stmdata_object.alternate + 1)*stmdata_object.repetitions)
 
 	# decide if it's a dI/dV or I(z) spec
 	if stmdata_object.spectype == 'iv':
-		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
 		stmdata_object = xr_spec_iv(stmdata_object)
-		# add metadata to the xarray
 		stmdata_object = add_spec_metadata(stmdata_object)
 	elif stmdata_object.spectype == 'iz':
-		# create the Iz spectrum Dataset
 		stmdata_object = xr_spec_iz(stmdata_object)
-		# add metadata
 		stmdata_object = add_spec_metadata(stmdata_object)
 	return stmdata_object
 
@@ -303,7 +298,7 @@ def xr_line_iv(stmdata_object):
 	currentarray = stmdata_object.spymdata.Current.data
 
 	# total number of spectra in one postion of the tip
-	numberofspectra = (stmdata_object.alternate + 1)*stmdata_object.repetitions
+	numberofspectra = int((stmdata_object.alternate + 1)*stmdata_object.repetitions)
 	# size of the line, the number of the different physical positions of the tip
 	linesize = int(specarray.shape[1] / numberofspectra)
 
@@ -326,9 +321,9 @@ def xr_line_iv(stmdata_object):
 	# This contains the coordinates in the order that the spectra are in. 
 	xcoo = pl.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Xcoord'])
 	ycoo = pl.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Ycoord'])
-	# reshaping the coordinates similarly to the spectra. Need only every second coordinate
-	tempx = xcoo[0::2]
-	tempy = ycoo[0::2]
+	# reshaping the coordinates similarly to the spectra. Need only every nth coordinate, where n is then number of spectra in a tip position
+	tempx = xcoo[0::numberofspectra]
+	tempy = ycoo[0::numberofspectra]
 	linelength = pl.sqrt((tempx[-1] - tempx[0])**2 + (tempy[-1] - tempy[0])**2)
 	# distance coordinates along the line in [nm]
 	linecoord = pl.linspace(0, linelength, num=tempx.shape[0])*10**9
@@ -527,6 +522,83 @@ def xr_map_iz(stmdata_object):
 	return stmdata_object
 
 
+def xr_line_iz(stmdata_object):
+	"""
+	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
+	Use the absolute values of the tip positions as coordinates
+
+	In spym the spectroscopy data is loaded into an array,
+	which has axis=0 the number of datapoints in the spectra
+	and axis=1 the number of spectra in total.
+
+	When rearranging, the number of repetitions within each tip position is assumed to be 1
+	and alternate scan direction is assumed to be turned on.
+	These options can be changed by the parameters, `repetitions` and `alternate`
+	"""
+
+	# extract the numpy array containing the Current data from the spym object
+	currentarray = stmdata_object.spymdata.Current.data
+
+	# total number of spectra in one postion of the tip
+	numberofspectra = int((stmdata_object.alternate + 1)*stmdata_object.repetitions)
+	# size of the line, the number of the different physical positions of the tip
+	linesize = int(currentarray.shape[1] / numberofspectra)
+
+	# reshape Current data
+	tempcurr = pl.reshape(currentarray, (currentarray.shape[0], -1, numberofspectra), order='C')
+	currentfw = tempcurr[:, :, 0::2]
+	currentbw = tempcurr[:, :, 1::2]
+
+	"""
+	Coordinates of the spectroscopy map
+	"""
+	# 'RHK_SpecDrift_Xcoord' are the coordinates of the spectra.
+	# This contains the coordinates in the order that the spectra are in. 
+	xcoo = pl.array(stmdata_object.spymdata.Current.attrs['RHK_SpecDrift_Xcoord'])
+	ycoo = pl.array(stmdata_object.spymdata.Current.attrs['RHK_SpecDrift_Ycoord'])
+	# reshaping the coordinates similarly to the spectra. Need only every nth coordinate, where n is the number of spectra in a position
+	tempx = xcoo[0::numberofspectra]
+	tempy = ycoo[0::numberofspectra]
+	linelength = pl.sqrt((tempx[-1] - tempx[0])**2 + (tempy[-1] - tempy[0])**2)
+	# distance coordinates along the line in [nm]
+	linecoord = pl.linspace(0, linelength, num=tempx.shape[0])*10**9
+
+	"""
+	Constructing the xarray Dataset 
+	"""
+	# stacking the forward and backward bias sweeps and using the scandir coordinate
+	# also adding specific attributes
+	xrspec = xr.Dataset(
+		data_vars = dict(
+			current = (['z', 'dist', 'repetitions', 'zscandir'], pl.stack((currentfw, currentbw), axis=-1)*10**12),
+			x = (['dist'], tempx*10**9),
+			y = (['dist'], tempy*10**9)
+			),
+		coords = dict(
+			z = stmdata_object.spymdata.coords['Current_x'].data*10**9,
+			dist = linecoord,
+			repetitions = pl.array(range(stmdata_object.repetitions)),
+			zscandir = pl.array(['up', 'down'], dtype = 'U')
+			),
+		attrs = dict(filename = stmdata_object.filename)
+	)
+
+	xrspec.coords['dist'].attrs['units'] = 'nm'
+	xrspec.coords['dist'].attrs['long units'] = 'nanometer'
+	xrspec.coords['z'].attrs['units'] = 'nm'
+	xrspec.coords['z'].attrs['long units'] = 'nanometer'
+
+	xrspec['x'].attrs['units'] = 'nm'
+	xrspec['y'].attrs['units'] = 'nm'
+	xrspec['x'].attrs['long units'] = 'nanometer'
+	xrspec['y'].attrs['long units'] = 'nanometer'
+	xrspec['current'].attrs['units'] = 'pA'
+	xrspec['current'].attrs['long units'] = 'picoampere'
+
+	stmdata_object.spectra = xrspec
+	return stmdata_object
+
+
 def xr_spec_iz(stmdata_object):
 	"""
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
@@ -661,8 +733,6 @@ def add_map_metadata(stmdata_object):
 		stmdata_object.spectra['lia'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
 
 	stmdata_object.spectra['current'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
-	stmdata_object.spectra.coords['bias'].attrs['units'] = 'V'
-	stmdata_object.spectra.coords['bias'].attrs['long units'] = 'volt'
 	stmdata_object.spectra['current'].attrs['bias units'] = 'V'
 	stmdata_object.spectra['current'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
 	stmdata_object.spectra['current'].attrs['setpoint units'] = 'pA'
@@ -677,19 +747,18 @@ def add_map_metadata(stmdata_object):
 
 
 def add_line_metadata(stmdata_object):
-	stmdata_object.spectra['lia'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
-	stmdata_object.spectra['current'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
-	stmdata_object.spectra.coords['bias'].attrs['units'] = 'V'
-	stmdata_object.spectra.coords['bias'].attrs['long units'] = 'volt'
-	stmdata_object.spectra['lia'].attrs['bias units'] = 'V'
-	stmdata_object.spectra['current'].attrs['bias units'] = 'V'
-	stmdata_object.spectra['lia'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
-	stmdata_object.spectra['current'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
-	stmdata_object.spectra['lia'].attrs['setpoint units'] = 'pA'
-	stmdata_object.spectra['current'].attrs['setpoint units'] = 'pA'
-	stmdata_object.spectra['lia'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
-	stmdata_object.spectra['current'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
+	if stmdata_object.spectype == 'iv':
+		stmdata_object.spectra['lia'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
+		stmdata_object.spectra['lia'].attrs['bias units'] = 'V'
+		stmdata_object.spectra['lia'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
+		stmdata_object.spectra['lia'].attrs['setpoint units'] = 'pA'
+		stmdata_object.spectra['lia'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
 
+	stmdata_object.spectra['current'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
+	stmdata_object.spectra['current'].attrs['bias units'] = 'V'
+	stmdata_object.spectra['current'].attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
+	stmdata_object.spectra['current'].attrs['setpoint units'] = 'pA'
+	stmdata_object.spectra['current'].attrs['time_per_point'] = stmdata_object.spymdata.Current.attrs['time_per_point']
 	stmdata_object.spectra.attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
 	stmdata_object.spectra.attrs['bias units'] = 'V'
 	stmdata_object.spectra.attrs['setpoint'] = stmdata_object.spymdata.Current.attrs['RHK_Current']*10**12
