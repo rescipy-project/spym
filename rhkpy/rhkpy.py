@@ -744,6 +744,13 @@ def add_map_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
 	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
 	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
+	stmdata_object.spectra.attrs['scan angle'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Angle']
+	stmdata_object.spectra.attrs['LI amplitude'] = stmdata_object.spymdata.Current.attrs['RHK_CH1Drive_Amplitude']*10**3
+	stmdata_object.spectra.attrs['LI amplitude unit'] = 'mV'
+	stmdata_object.spectra.attrs['LI frequency'] = stmdata_object.spymdata.Current.attrs['RHK_CH1Drive_Frequency']
+	stmdata_object.spectra.attrs['LI frequency unit'] = 'Hz'
+	stmdata_object.spectra.attrs['LI phase'] = stmdata_object.spymdata.Current.attrs['RHK_Lockin0_PhaseOffset']
+
 	return stmdata_object
 
 
@@ -766,6 +773,12 @@ def add_line_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
 	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
 	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
+	stmdata_object.spectra.attrs['scan angle'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Angle']
+	stmdata_object.spectra.attrs['LI amplitude'] = stmdata_object.spymdata.Current.attrs['RHK_CH1Drive_Amplitude']*10**3
+	stmdata_object.spectra.attrs['LI amplitude unit'] = 'mV'
+	stmdata_object.spectra.attrs['LI frequency'] = stmdata_object.spymdata.Current.attrs['RHK_CH1Drive_Frequency']
+	stmdata_object.spectra.attrs['LI frequency unit'] = 'Hz'
+	stmdata_object.spectra.attrs['LI phase'] = stmdata_object.spymdata.Current.attrs['RHK_Lockin0_PhaseOffset']
 	return stmdata_object
 
 
@@ -791,6 +804,11 @@ def add_spec_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['setpoint units'] = 'pA'
 	stmdata_object.spectra.attrs['measurement date'] = stmdata_object.spymdata.Current.attrs['RHK_Date']
 	stmdata_object.spectra.attrs['measurement time'] = stmdata_object.spymdata.Current.attrs['RHK_Time']
+	stmdata_object.spectra.attrs['LI amplitude'] = stmdata_object.spymdata.Current.attrs['RHK_CH1Drive_Amplitude']*10**3
+	stmdata_object.spectra.attrs['LI amplitude unit'] = 'mV'
+	stmdata_object.spectra.attrs['LI frequency'] = stmdata_object.spymdata.Current.attrs['RHK_CH1Drive_Frequency']
+	stmdata_object.spectra.attrs['LI frequency unit'] = 'Hz'
+	stmdata_object.spectra.attrs['LI phase'] = stmdata_object.spymdata.Current.attrs['RHK_Lockin0_PhaseOffset']
 	return stmdata_object
 
 
@@ -801,6 +819,7 @@ def add_image_metadata(stmdata_object):
 	stmdata_object.image.attrs['setpoint units'] = 'pA'
 	stmdata_object.image.attrs['measurement date'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Date']
 	stmdata_object.image.attrs['measurement time'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Time']
+	stmdata_object.image.attrs['scan angle'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Angle']
 	return stmdata_object
 
 
