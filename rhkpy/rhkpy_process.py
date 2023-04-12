@@ -1,5 +1,6 @@
 import xarray as xr
 import pylab as pl
 import numpy as np
-import spym
 
+def hello_filename(stmdata_object):
+	print(stmdata_object.filename)

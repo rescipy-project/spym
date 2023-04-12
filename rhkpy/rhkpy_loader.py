@@ -7,6 +7,7 @@ from spym.io import rhksm4
 ## flatten and plane fitting
 from spym.process.level import align
 from spym.process.level import plane
+from .rhkpy_process import *
 
 class rhkpy:
 	"""
@@ -64,6 +65,9 @@ class rhkpy:
 		print('\nspymdata:')
 		for item in self.spymdata:
 			print('\t', item)
+
+	def print_filename(self):
+		hello_filename(self)
 
 
 def checkdatatype(stmdata_object):
