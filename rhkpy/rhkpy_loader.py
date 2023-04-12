@@ -16,19 +16,13 @@ class rhkpy:
 	repetitions: the number of spectra in each physical position of the tip
 	alternate: True if forward and backward bias sweeps are turned on, False if not
 	"""
-	def __init__(self, filename, repetitions = 1, alternate = True, datatype = 'none', **kwargs):
-		# check if parameters passed to the class are valid
-		if repetitions <= 0:
-			print("repetitions needs to be an integer, with a value of 1 or above. Default is 1")
-		elif isinstance(repetitions, int) == False:
-			print("repetitions needs to be an integer. Default is 1")
+	def __init__(self, filename, repetitions = 0, alternate = True, datatype = 'none', **kwargs):
 
 		if isinstance(alternate, bool) == False:
 			print("alternate needs to be a bool variable: True or False. Default is True")
 
 		self.filename = filename
-		# number of spectra at a tip position
-		self.repetitions = repetitions
+
 		# Boolean value, True if alternate scan directions is turned on
 		self.alternate = alternate
 
@@ -49,6 +43,23 @@ class rhkpy:
 			else:
 				self.datatype = datatype
 
+		# number of spectra at a tip position
+		# default value is 0, if this is changed, the code will use the given value, othewise it will try to infer the number of repetitions from the number of identical tip positions
+		if self.datatype != 'image':
+			if repetitions != 0:
+				# overwrite the default value and the value inferred from tip coordinates
+				# check if parameters passed to the class are valid
+				if repetitions <= 0:
+					print("repetitions needs to be an integer, with a value of 1 or above. Default is 1")
+				elif isinstance(repetitions, int) == False:
+					print("repetitions needs to be an integer. Default is 1")
+				self.repetitions = repetitions
+			else:
+				# determine the number of repetitions from the number of indentical tip coordinates in the beginning of RHK_SpecDrift_Xcoord
+				self.repetitions = checkrepetitions(self)
+		else:
+			self.repetitions = repetitions
+
 		# load data into xarray, for all data types
 		if self.datatype == 'map':
 			self = load_specmap(self)
@@ -66,8 +77,20 @@ class rhkpy:
 		for item in self.spymdata:
 			print('\t', item)
 
-	def print_filename(self):
-		hello_filename(self)
+	def specpos(self):
+		plot_spec_position(self)
+
+
+def checkrepetitions(stmdata_object):
+	coordlist = stmdata_object.spymdata.Current.attrs['RHK_SpecDrift_Xcoord']
+	reps = 0
+	for coo in coordlist:
+		if coo == coordlist[0]:
+			reps += 1
+		else:
+			break
+	reps = int(reps / (stmdata_object.alternate + 1))
+	return reps
 
 
 def checkdatatype(stmdata_object):
