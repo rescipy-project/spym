@@ -78,6 +78,7 @@ class rhkpy:
 			print('\t', item)
 
 	def specpos(self):
+		# plot the positions of spectra on a topography image
 		plot_spec_position(self)
 
 
