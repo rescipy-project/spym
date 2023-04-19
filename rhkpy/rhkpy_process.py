@@ -26,5 +26,6 @@ def plot_spec_position(stmdata_object):
 		alpha = 0.5,
 		color = 'r'
 		)
+	
 
 
