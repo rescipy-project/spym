@@ -77,9 +77,13 @@ class rhkpy:
 		for item in self.spymdata:
 			print('\t', item)
 
-	def specpos(self):
+	def specpos(self, repetitions=0, zscandir=0, z=0, **kwargs):
 		# plot the positions of spectra on a topography image
-		plot_spec_position(self)
+		return plot_spec_position(self, repetitions=repetitions, zscandir=zscandir, z=z)
+
+	# def plotmap(self):
+		# testing needs to be implemented better
+		
 
 
 def checkrepetitions(stmdata_object):
