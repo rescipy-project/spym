@@ -30,9 +30,9 @@ class rhkpy:
 		self.spymdata = load_spym(self.filename)
 		# check software version. Not tested for MinorVer < 6
 		print(self.spymdata)
-		l = list(self.spymdata.keys())
-		if self.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
-			print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
+		# l = list(self.spymdata.keys())
+		# if self.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
+			# print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
 
 		# check type of data contained in the file, if no type is specified
 		if datatype == 'none':
