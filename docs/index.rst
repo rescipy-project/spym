@@ -10,6 +10,7 @@ Welcome to rhkpy's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+   intro
    rhkpy
    modules
 

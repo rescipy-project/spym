@@ -1,12 +1,17 @@
-import xarray as xr
 import pylab as pl
 import numpy as np
-import spym
+import xarray as xr
+
+# import spym
+from spym.io import load
+
 ## Using the old loader
 from spym.io import rhksm4
+
 ## flatten and plane fitting
 from spym.process.level import align
 from spym.process.level import plane
+
 from .rhkpy_process import *
 
 class rhkpy:
@@ -862,5 +867,5 @@ def load_rhksm4(filename):
 
 def load_spym(filename):
 	"""Load the data from the .sm4 file using spym"""
-	return spym.load(filename)
+	return load(filename)
 
