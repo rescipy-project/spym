@@ -14,12 +14,9 @@ from spym.process.level import plane
 
 from .rhkpy_process import *
 
-class rhkpy:
+class rhkpyload:
 	"""
-	stmData class as a container for the xarray based structure of the data
-	Parameters:
-	repetitions: the number of spectra in each physical position of the tip
-	alternate: True if forward and backward bias sweeps are turned on, False if not
+	A container for the xarray based structure of the RHK data.
 	"""
 	def __init__(self, filename, repetitions = 0, alternate = True, datatype = 'none', **kwargs):
 
@@ -34,13 +31,13 @@ class rhkpy:
 		# Load the data using spym
 		self.spymdata = load_spym(self.filename)
 		# check software version. Not tested for MinorVer < 6
-		# l = list(self.spymdata.keys())
-		# if self.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
-			# print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
+		l = list(self.spymdata.keys())
+		if self.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
+			print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
 
 		# check type of data contained in the file, if no type is specified
 		if datatype == 'none':
-			self.datatype, self.spectype = checkdatatype(self)
+			self.datatype, self.spectype = _checkdatatype(self)
 		else:
 			if (datatype != 'map') and (datatype != 'line') and (datatype != 'spec') and (datatype != 'image'):
 				print('datatype must be either: map, line, spec or image')
@@ -61,19 +58,19 @@ class rhkpy:
 				self.repetitions = repetitions
 			else:
 				# determine the number of repetitions from the number of indentical tip coordinates in the beginning of RHK_SpecDrift_Xcoord
-				self.repetitions = checkrepetitions(self)
+				self.repetitions = _checkrepetitions(self)
 		else:
 			self.repetitions = repetitions
 
 		# load data into xarray, for all data types
 		if self.datatype == 'map':
-			self = load_specmap(self)
+			self = _load_specmap(self)
 		elif self.datatype == 'line':
-			self = load_line(self)
+			self = _load_line(self)
 		elif self.datatype == 'spec':
-			self = load_spec(self)
+			self = _load_spec(self)
 		elif self.datatype == 'image':
-			self = load_image(self)
+			self = _load_image(self)
 
 	def print_info(self):
 		for item in self.__dict__:
@@ -91,7 +88,7 @@ class rhkpy:
 		
 
 
-def checkrepetitions(stmdata_object):
+def _checkrepetitions(stmdata_object):
 	coordlist = stmdata_object.spymdata.Current.attrs['RHK_SpecDrift_Xcoord']
 	reps = 0
 	for coo in coordlist:
@@ -103,7 +100,7 @@ def checkrepetitions(stmdata_object):
 	return reps
 
 
-def checkdatatype(stmdata_object):
+def _checkdatatype(stmdata_object):
 	# Look at the metadata and structure of spectra coordinates to determine the type of file being worked with
 	l = list(stmdata_object.spymdata.keys())
 	if stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 7:
@@ -122,7 +119,7 @@ def checkdatatype(stmdata_object):
 		# decide based on the aspect ratio of the spectroscopy tip positions
 		xcoo = pl.array(stmdata_object.spymdata[l[-1]].attrs['RHK_SpecDrift_Xcoord'])
 		ycoo = pl.array(stmdata_object.spymdata[l[-1]].attrs['RHK_SpecDrift_Ycoord'])
-		if aspect_ratio(xcoo, ycoo) > 10:
+		if _aspect_ratio(xcoo, ycoo) > 10:
 			stmdata_object.datatype = 'line'
 		else:
 			stmdata_object.datatype = 'map'
@@ -130,7 +127,7 @@ def checkdatatype(stmdata_object):
 	return stmdata_object.datatype, stmdata_object.spectype
 
 
-def aspect_ratio(x, y):
+def _aspect_ratio(x, y):
     xy = np.stack((x, y), axis=0)
     eigvals, eigvecs = np.linalg.eig(np.cov(xy))
     center = xy.mean(axis=-1)
@@ -141,43 +138,43 @@ def aspect_ratio(x, y):
     return aspect
 
 
-def load_specmap(stmdata_object):
+def _load_specmap(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = int((stmdata_object.alternate + 1)*stmdata_object.repetitions)
 	# load the image
-	stmdata_object = load_image(stmdata_object)
+	stmdata_object = _load_image(stmdata_object)
 
 	# decide if it's a dI/dV or I(z) map
 	if stmdata_object.spectype == 'iv':
 		# create a DataSet, containing the LIA and Current maps, with appropriate position coordinates
-		stmdata_object = xr_map_iv(stmdata_object)
+		stmdata_object = _xr_map_iv(stmdata_object)
 		# add metadata to the xarray
-		stmdata_object = add_map_metadata(stmdata_object)
+		stmdata_object = _add_map_metadata(stmdata_object)
 	elif stmdata_object.spectype == 'iz':
 		# create xarray Dataset
-		stmdata_object = xr_map_iz(stmdata_object)
+		stmdata_object = _xr_map_iz(stmdata_object)
 		# add metadata to the xarray
-		stmdata_object = add_map_metadata(stmdata_object)
+		stmdata_object = _add_map_metadata(stmdata_object)
 	return stmdata_object
 
 
-def load_line(stmdata_object):
+def _load_line(stmdata_object):
 	# total number of spectra in one postion of the tip
 	stmdata_object.numberofspectra = int((stmdata_object.alternate + 1)*stmdata_object.repetitions)
 	# load the image data
-	stmdata_object = load_image(stmdata_object)
+	stmdata_object = _load_image(stmdata_object)
 
 	# decide if it's a dI/dV or I(z) line
 	if stmdata_object.spectype == 'iv':
-		stmdata_object = xr_line_iv(stmdata_object)
-		stmdata_object = add_line_metadata(stmdata_object)
+		stmdata_object = _xr_line_iv(stmdata_object)
+		stmdata_object = _add_line_metadata(stmdata_object)
 	elif stmdata_object.spectype == 'iz':
-		stmdata_object = xr_line_iz(stmdata_object)
-		stmdata_object = add_spec_metadata(stmdata_object)
+		stmdata_object = _xr_line_iz(stmdata_object)
+		stmdata_object = _add_spec_metadata(stmdata_object)
 	return stmdata_object
 
 
-def load_spec(stmdata_object):
+def _load_spec(stmdata_object):
 	# in this case the total number of spectra can be inferred
 	# total number of spectra in one postion of the tip
 	stmdata_object.repetitions = int(stmdata_object.spymdata.Current.data.shape[1] / (stmdata_object.alternate + 1))
@@ -185,25 +182,25 @@ def load_spec(stmdata_object):
 
 	# decide if it's a dI/dV or I(z) spec
 	if stmdata_object.spectype == 'iv':
-		stmdata_object = xr_spec_iv(stmdata_object)
-		stmdata_object = add_spec_metadata(stmdata_object)
+		stmdata_object = _xr_spec_iv(stmdata_object)
+		stmdata_object = _add_spec_metadata(stmdata_object)
 	elif stmdata_object.spectype == 'iz':
-		stmdata_object = xr_spec_iz(stmdata_object)
-		stmdata_object = add_spec_metadata(stmdata_object)
+		stmdata_object = _xr_spec_iz(stmdata_object)
+		stmdata_object = _add_spec_metadata(stmdata_object)
 	return stmdata_object
 
 
-def load_image(stmdata_object):
+def _load_image(stmdata_object):
 	# load the image data
-	stmdata_object = xr_image(stmdata_object)
+	stmdata_object = _xr_image(stmdata_object)
 	# add metadata
-	stmdata_object = add_image_metadata(stmdata_object)
+	stmdata_object = _add_image_metadata(stmdata_object)
 	return stmdata_object
 
 
-def xr_map_iv(stmdata_object):
+def _xr_map_iv(stmdata_object):
 	"""
-	!!!!! ISSUE: need to change spectrum rearranging for the case where alternate is False
+	TODO need to change spectrum rearranging for the case where alternate is False
 
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions as coordinates
@@ -316,7 +313,7 @@ def xr_map_iv(stmdata_object):
 	return stmdata_object
 
 
-def xr_line_iv(stmdata_object):
+def _xr_line_iv(stmdata_object):
 	"""
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions as coordinates
@@ -403,7 +400,7 @@ def xr_line_iv(stmdata_object):
 	return stmdata_object
 
 
-def xr_spec_iv(stmdata_object):
+def _xr_spec_iv(stmdata_object):
 	"""
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions are in the attributes
@@ -467,9 +464,9 @@ def xr_spec_iv(stmdata_object):
 	return stmdata_object
 
 
-def xr_map_iz(stmdata_object):
+def _xr_map_iz(stmdata_object):
 	"""
-	!!!!! ISSUE: need to change spectrum rearranging for the case where alternate is False
+	TODO need to change spectrum rearranging for the case where alternate is False
 
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions as coordinates
@@ -560,7 +557,7 @@ def xr_map_iz(stmdata_object):
 	return stmdata_object
 
 
-def xr_line_iz(stmdata_object):
+def _xr_line_iz(stmdata_object):
 	"""
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions as coordinates
@@ -637,7 +634,7 @@ def xr_line_iz(stmdata_object):
 	return stmdata_object
 
 
-def xr_spec_iz(stmdata_object):
+def _xr_spec_iz(stmdata_object):
 	"""
 	Create a DataSet containing the Lock-In (LIA) and Current spectroscopy data
 	Use the absolute values of the tip positions are in the attributes
@@ -692,7 +689,7 @@ def xr_spec_iz(stmdata_object):
 	return stmdata_object
 
 
-def xr_image(stmdata_object):
+def _xr_image(stmdata_object):
 	# topography
 	topofw = stmdata_object.spymdata.Topography_Forward
 	topobw = stmdata_object.spymdata.Topography_Backward
@@ -762,7 +759,7 @@ def xr_image(stmdata_object):
 	return stmdata_object
 
 
-def add_map_metadata(stmdata_object):
+def _add_map_metadata(stmdata_object):
 	if stmdata_object.spectype == 'iv':
 		stmdata_object.spectra['lia'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
 		stmdata_object.spectra['lia'].attrs['bias units'] = 'V'
@@ -791,7 +788,7 @@ def add_map_metadata(stmdata_object):
 	return stmdata_object
 
 
-def add_line_metadata(stmdata_object):
+def _add_line_metadata(stmdata_object):
 	if stmdata_object.spectype == 'iv':
 		stmdata_object.spectra['lia'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
 		stmdata_object.spectra['lia'].attrs['bias units'] = 'V'
@@ -819,7 +816,7 @@ def add_line_metadata(stmdata_object):
 	return stmdata_object
 
 
-def add_spec_metadata(stmdata_object):
+def _add_spec_metadata(stmdata_object):
 	if stmdata_object.spectype == 'iv':
 		stmdata_object.spectra['lia'].attrs['bias'] = stmdata_object.spymdata.Current.attrs['bias']
 		stmdata_object.spectra['lia'].attrs['bias units'] = 'V'
@@ -849,7 +846,7 @@ def add_spec_metadata(stmdata_object):
 	return stmdata_object
 
 
-def add_image_metadata(stmdata_object):
+def _add_image_metadata(stmdata_object):
 	stmdata_object.image.attrs['bias'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Bias']
 	stmdata_object.image.attrs['bias units'] = 'V'
 	stmdata_object.image.attrs['setpoint'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Current']*10**12
@@ -860,9 +857,8 @@ def add_image_metadata(stmdata_object):
 	return stmdata_object
 
 
-"""Using spym to load the data from the sm4 file"""
 def load_rhksm4(filename):
-	"""Load the data from the .sm4 file using the old loader"""
+	"""Load the data from the .sm4 file using the old loader from spym"""
 	return rhksm4.load(filename)
 
 def load_spym(filename):
