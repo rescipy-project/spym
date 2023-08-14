@@ -391,7 +391,7 @@ def peakfit(xrobj, func = gaussian, fitresult = None, stval = None, bounds = Non
 		# this should be the bias of the peak maximum if the fit was successful
 		fitpeakpos = bias_resample[np.argmax(funcvalues)]
 		plotarea_x = (biasmax - biasmin)/2
-		plotarea_y = [1.2*np.min(xrobj.data), 1.2*np.max(xrobj.data)]
+		plotarea_y = [0.8*np.min(xrobj.data), 1.2*np.max(xrobj.data)]
 
 		pl.plot(bias_resample, funcvalues, color = 'red', lw = 3, alpha = 0.5, label = 'fit')
 		pl.xlim([fitpeakpos - plotarea_x, fitpeakpos + plotarea_x])
@@ -401,8 +401,8 @@ def peakfit(xrobj, func = gaussian, fitresult = None, stval = None, bounds = Non
 	# copy attributes to the fit dataset, update the 'comments'
 	fit.attrs = xrobj.attrs.copy()
 	# update the comments if it exists
-	if hasattr(fit, 'comments'):
-		fit.attrs['comments'] += 'peak fitting, using ' + str(func.__name__) + '\n'
+	# if hasattr(fit, 'comments'):
+	# 	fit.attrs['comments'] += 'peak fitting, using ' + str(func.__name__) + '\n'
 		
 	return fit
 
