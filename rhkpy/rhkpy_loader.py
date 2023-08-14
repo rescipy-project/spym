@@ -14,7 +14,7 @@ from spym.process.level import plane
 
 from .rhkpy_process import *
 
-class rhkpyload:
+class rhkdata:
 	"""
 	A container for the xarray based structure of the RHK data.
 	"""
@@ -73,19 +73,17 @@ class rhkpyload:
 			self = _load_image(self)
 
 	def print_info(self):
+		"""List the variables and functions of the :class:`rhkdata` instance.
+		"""		
 		for item in self.__dict__:
 			print(item)
 		print('\nspymdata:')
 		for item in self.spymdata:
 			print('\t', item)
 
-	def specpos(self, repetitions=0, zscandir=0, z=0, **kwargs):
+	def specpos(self, repetitions=0, zscandir=0, z=0, **kwargs):		
 		# plot the positions of spectra on a topography image
 		return plot_spec_position(self, repetitions=repetitions, zscandir=zscandir, z=z)
-
-	# def plotmap(self):
-		# testing needs to be implemented better
-		
 
 
 def _checkrepetitions(stmdata_object):
@@ -234,11 +232,11 @@ def _xr_map_iv(stmdata_object):
 	# reshape the forward and backward parts into a map
 	speccmap_fw = pl.reshape(spec_fw, (spec_fw.shape[0], mapsize, mapsize, spec_fw.shape[2]), order='C')
 	speccmap_bw = pl.reshape(spec_bw, (spec_bw.shape[0], mapsize, mapsize, spec_bw.shape[2]), order='C')
-	"""
-	The last axis (in this case with length of 1) contains the repeated scans in one particular pixel.
-	If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
-	The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
-	"""
+	
+	# The last axis (in this case with length of 1) contains the repeated scans in one particular pixel.
+	# If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
+	# The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
+	
 	liafw = pl.flip(speccmap_fw, axis=1)
 	liabw = pl.flip(speccmap_bw, axis=1)
 
@@ -251,31 +249,29 @@ def _xr_map_iv(stmdata_object):
 	# reshape the forward and backward parts into a map
 	currentmap_fw = pl.reshape(current_fw, (current_fw.shape[0], mapsize, mapsize, current_fw.shape[2]), order='C')
 	currentmap_bw = pl.reshape(current_bw, (current_bw.shape[0], mapsize, mapsize, current_bw.shape[2]), order='C')
-	"""
-	The last axis (in this case with length of 1) contains the repeated scans in one particular pixel.
-	If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
-	The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
-	"""
+	
+	# The last axis (in this case with length of 1) contains the repeated scans in one particular pixel.
+	# If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
+	# The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
+	
 	currentfw = pl.flip(currentmap_fw, axis=1)
 	currentbw = pl.flip(currentmap_bw, axis=1)	
 
-	"""
-	Coordinates of the spectroscopy map
-	"""
+	# Coordinates of the spectroscopy map
+	
 	# 'RHK_SpecDrift_Xcoord' are the coordinates of the spectra.
 	# This contains the coordinates in the order that the spectra are in. 
 	xcoo = pl.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Xcoord'])
 	ycoo = pl.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Ycoord'])
+	
 	# reshaping the coordinates similarly to the spectra. This is a coordinates mesh
 	# at the end slicing the arrays to get the X, Y coordinates, we don't need the mesh
 	meshx = pl.reshape(xcoo, (mapsize, mapsize, numberofspectra), order='C')[:, :, 0]
 	meshy = pl.reshape(ycoo, (mapsize, mapsize, numberofspectra), order='C')[:, :, 0]
 	tempx = pl.reshape(xcoo, (mapsize, mapsize, numberofspectra), order='C')[0, :, 0]
 	tempy = pl.reshape(ycoo, (mapsize, mapsize, numberofspectra), order='C')[:, 0, 0]
-
-	"""
-	Constructing the xarray DataSet 
-	"""
+	
+	# Constructing the xarray DataSet 
 	# stacking the forward and backward bias sweeps and using the scandir coordinate
 	# also adding specific attributes
 	xrspec = xr.Dataset(
@@ -712,18 +708,19 @@ def _xr_image(stmdata_object):
 	xoff = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Xoffset']
 	yoff = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Yoffset']
 
+	# these are the relative coordinates (from 0 to size of the image)
 	xx = stmdata_object.spymdata.Topography_Forward_x.data
 	yy = stmdata_object.spymdata.Topography_Forward_y.data
 
+	# calculate the relative coordinates, including rotation
 	# the offset refers to the corner of the image, so we need to account for that
 	xlength = abs(xx[-1] - xx[0])
 	ylength = abs(yy[-1] - yy[0])
+
 	xoff -= xlength/2
 	yoff -= ylength/2
 
-	"""
-	create xarray Dataset of the image data
-	"""
+	# create xarray Dataset of the image data
 	xrimage = xr.Dataset(
 		data_vars = dict(
 			topography = (['x', 'y', 'scandir'], pl.stack((topofw.data, topobw.data), axis=-1)*10**9),
@@ -731,8 +728,8 @@ def _xr_image(stmdata_object):
 			lia = (['x', 'y', 'scandir'], pl.stack((liafw.data, liabw.data), axis=-1)*10**12)
 			),
 		coords = dict(
-			x = (xx + xoff)*10**9,
-			y = (yy + yoff)*10**9,
+			x = xx*10**9,
+			y = yy*10**9,
 			scandir = pl.array(['forward', 'backward'])
 			),
 		attrs = dict(
