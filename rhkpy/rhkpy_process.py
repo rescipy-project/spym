@@ -18,8 +18,28 @@ def conf_hvplot_defaults():
 			)
 		) # can't set default colormap with this
 
-def coord_to_absolute(stmdata_object):
-	pass
+def coord_to_absolute(xrobj):
+	# the xrobj passed to the function should always be and image
+	# if not hasattr(xrobj, 'image'):
+	# 	print('Wrong xarray type. The data needs to be an `image`, not `spectra`')
+	# 	return
+	
+	# TODO here we will need to loop trough the dataarrays in xrobj
+	# for now let's just take the forward topo
+	imagedata = xrobj.data
+
+	rotated = ndimage.rotate(
+		imagedata,
+		30,
+		reshape = True,
+		mode = 'constant',
+		cval = 0
+		)
+	
+	# relcoord_xrobj = xrobj.copy()
+	# relcoord_xrobj.data = rotated
+
+	return rotated
 
 def plot_spec_position(stmdata_object, repetitions, zscandir, z, **kwargs):
 	

@@ -19,7 +19,7 @@ class rhkdata:
 	"""
 	A container for the xarray based structure of the RHK data.
 	"""
-	def __init__(self, filename, repetitions = 0, alternate = True, datatype = 'none', **kwargs):
+	def __init__(self, filename, repetitions = 0, alternate = True, datatype = None, **kwargs):
 
 		if isinstance(alternate, bool) == False:
 			print("alternate needs to be a bool variable: True or False. Default is True")
@@ -37,7 +37,7 @@ class rhkdata:
 			print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
 
 		# check type of data contained in the file, if no type is specified
-		if datatype == 'none':
+		if datatype is None:
 			self.datatype, self.spectype = _checkdatatype(self)
 		else:
 			if (datatype != 'map') and (datatype != 'line') and (datatype != 'spec') and (datatype != 'image'):
@@ -107,7 +107,7 @@ def _checkdatatype(stmdata_object):
 	elif stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 8:
 		stmdata_object.spectype = 'iz'
 	elif stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 0:
-		stmdata_object.spectype = 'none'
+		stmdata_object.spectype = None
 	
 	if stmdata_object.spymdata[l[-1]].attrs['RHK_PageType'] == 1:
 		stmdata_object.datatype = 'image'
@@ -789,6 +789,10 @@ def _add_map_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['LI frequency unit'] = 'Hz'
 	stmdata_object.spectra.attrs['LI phase'] = stmdata_object.spymdata.Current.attrs['RHK_Lockin0_PhaseOffset']
 
+	# store the data and spectrum type in the attributes
+	stmdata_object.spectra.attrs['datatype'] = stmdata_object.datatype
+	stmdata_object.spectra.attrs['spectype'] = stmdata_object.spectype
+
 	return stmdata_object
 
 
@@ -817,6 +821,11 @@ def _add_line_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['LI frequency'] = stmdata_object.spymdata.Current.attrs['RHK_CH1Drive_Frequency']
 	stmdata_object.spectra.attrs['LI frequency unit'] = 'Hz'
 	stmdata_object.spectra.attrs['LI phase'] = stmdata_object.spymdata.Current.attrs['RHK_Lockin0_PhaseOffset']
+
+	# store the data and spectrum type in the attributes
+	stmdata_object.spectra.attrs['datatype'] = stmdata_object.datatype
+	stmdata_object.spectra.attrs['spectype'] = stmdata_object.spectype
+
 	return stmdata_object
 
 
@@ -847,6 +856,11 @@ def _add_spec_metadata(stmdata_object):
 	stmdata_object.spectra.attrs['LI frequency'] = stmdata_object.spymdata.Current.attrs['RHK_CH1Drive_Frequency']
 	stmdata_object.spectra.attrs['LI frequency unit'] = 'Hz'
 	stmdata_object.spectra.attrs['LI phase'] = stmdata_object.spymdata.Current.attrs['RHK_Lockin0_PhaseOffset']
+	
+	# store the data and spectrum type in the attributes
+	stmdata_object.spectra.attrs['datatype'] = stmdata_object.datatype
+	stmdata_object.spectra.attrs['spectype'] = stmdata_object.spectype
+	
 	return stmdata_object
 
 
@@ -858,6 +872,12 @@ def _add_image_metadata(stmdata_object):
 	stmdata_object.image.attrs['measurement date'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Date']
 	stmdata_object.image.attrs['measurement time'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Time']
 	stmdata_object.image.attrs['scan angle'] = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Angle']
+	
+	# store the data and spectrum type in the attributes
+	# in the case for a map, the datatype value will not be 'image', but 'map'
+	stmdata_object.image.attrs['datatype'] = stmdata_object.datatype
+	stmdata_object.image.attrs['spectype'] = stmdata_object.spectype
+
 	return stmdata_object
 
 
