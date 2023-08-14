@@ -1,8 +1,9 @@
-import pylab as pl
+import matplotlib.pyplot as pl
 import numpy as np
 import xarray as xr
+import re
 
-# import spym
+# import load from spym
 from spym.io import load
 
 ## Using the old loader
@@ -135,6 +136,12 @@ def _aspect_ratio(x, y):
     aspect = max(eigvals) / min(eigvals)
     return aspect
 
+def _get_filename(s):
+	# If the string ends with a slash or backslash, remove it first
+    s = s.rstrip("/\\")
+    # Then, match any character other than backslash or slash until the end of the string
+    match = re.search(r'[^/\\]+$', s)
+    return match.group(0) if match else None
 
 def _load_specmap(stmdata_object):
 	# total number of spectra in one postion of the tip
@@ -270,7 +277,7 @@ def _xr_map_iv(stmdata_object):
 	meshy = pl.reshape(ycoo, (mapsize, mapsize, numberofspectra), order='C')[:, :, 0]
 	tempx = pl.reshape(xcoo, (mapsize, mapsize, numberofspectra), order='C')[0, :, 0]
 	tempy = pl.reshape(ycoo, (mapsize, mapsize, numberofspectra), order='C')[:, 0, 0]
-	
+
 	# Constructing the xarray DataSet 
 	# stacking the forward and backward bias sweeps and using the scandir coordinate
 	# also adding specific attributes
@@ -288,7 +295,7 @@ def _xr_map_iv(stmdata_object):
 			repetitions = pl.array(range(stmdata_object.repetitions)),
 			biasscandir = pl.array(['left', 'right'], dtype = 'U')
 			),
-		attrs = dict(filename = stmdata_object.filename)
+		attrs = dict(filename = _get_filename(stmdata_object.filename))
 	)
 
 	xrspec['lia'].attrs['units'] = 'pA'
@@ -377,7 +384,7 @@ def _xr_line_iv(stmdata_object):
 			repetitions = pl.array(range(stmdata_object.repetitions)),
 			biasscandir = pl.array(['left', 'right'], dtype = 'U')
 			),
-		attrs = dict(filename = stmdata_object.filename)
+		attrs = dict(filename = _get_filename(stmdata_object.filename))
 	)
 
 	xrspec.coords['dist'].attrs['units'] = 'nm'
@@ -443,7 +450,7 @@ def _xr_spec_iv(stmdata_object):
 			repetitions = pl.array(range(stmdata_object.repetitions)),
 			biasscandir = pl.array(['left', 'right'], dtype = 'U')
 			),
-		attrs = dict(filename = stmdata_object.filename)
+		attrs = dict(filename = _get_filename(stmdata_object.filename))
 	)
 
 	xrspec.attrs['speccoord_x'] = tempx*10**9
@@ -533,7 +540,7 @@ def _xr_map_iz(stmdata_object):
 			repetitions = pl.array(range(stmdata_object.repetitions)),
 			zscandir = pl.array(['up', 'down'], dtype = 'U')
 			),
-		attrs = dict(filename = stmdata_object.filename)
+		attrs = dict(filename = _get_filename(stmdata_object.filename))
 	)
 
 	xrspec['current'].attrs['units'] = 'pA'
@@ -611,7 +618,7 @@ def _xr_line_iz(stmdata_object):
 			repetitions = pl.array(range(stmdata_object.repetitions)),
 			zscandir = pl.array(['up', 'down'], dtype = 'U')
 			),
-		attrs = dict(filename = stmdata_object.filename)
+		attrs = dict(filename = _get_filename(stmdata_object.filename))
 	)
 
 	xrspec.coords['dist'].attrs['units'] = 'nm'
@@ -669,7 +676,7 @@ def _xr_spec_iz(stmdata_object):
 			repetitions = pl.array(range(stmdata_object.repetitions)),
 			zscandir = pl.array(['up', 'down'], dtype = 'U')
 			),
-		attrs = dict(filename = stmdata_object.filename)
+		attrs = dict(filename = _get_filename(stmdata_object.filename))
 	)
 
 	xrspec.attrs['speccoord_x'] = tempx*10**9
