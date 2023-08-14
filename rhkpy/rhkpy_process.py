@@ -1,12 +1,22 @@
-import xarray as xr
-import pylab as pl
+import matplotlib.pyplot as pl
 import numpy as np
-import hvplot.xarray
+import xarray as xr
+import hvplot
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 from scipy import ndimage
 
-hvplot.extension('bokeh')
+def conf_hvplot_defaults():
+	"""Set up some default values for the plotting parameters, when using `hvplot`.
+	"""	
+	hvplot.extension('bokeh')
+	# Setting some default plot options for hvplot
+	from holoviews import opts
+	opts.defaults(
+		opts.Image(
+			aspect = 'equal'
+			)
+		) # can't set default colormap with this
 
 def coord_to_absolute(stmdata_object):
 	pass
