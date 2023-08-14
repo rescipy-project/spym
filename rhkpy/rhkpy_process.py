@@ -14,7 +14,7 @@ def conf_hvplot_defaults():
 	from holoviews import opts
 	opts.defaults(
 		opts.Image(
-			aspect = 'equal'
+			aspect = 1
 			)
 		) # can't set default colormap with this
 
