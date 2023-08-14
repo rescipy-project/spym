@@ -43,7 +43,7 @@ def plot_spec_position(stmdata_object, repetitions, zscandir, z, **kwargs):
 	
 ## peak finding and background subtraction
 
-def gaussian(x, x0 = 1580, ampl = 10, width = 15, offset = 900):
+def gaussian(x, x0 = 0, ampl = 2, width = 0.1, offset = 0):
 	"""Gaussian function. Width and amplitude parameters have the same meaning as for :func:`lorentz`.
 
 	:param x: values for the x coordinate
@@ -64,12 +64,12 @@ def gaussian(x, x0 = 1580, ampl = 10, width = 15, offset = 900):
 	return offset + ampl * np.exp(-2*np.log(2)*(x - x0)**2 / (width**2))
 
 
-def lorentz(x, x0 = 1580, ampl = 10, width = 15, offset = 900):
+def lorentz(x, x0 = 0, ampl = 2, width = 0.1, offset = 0):
 	"""Single Lorentz function
 
 	:param x: values for the x coordinate
 	:type x: float, :py:mod:`numpy` array, etc.
-	:param x0: shift along the `x` corrdinate
+	:param x0: `x` corrdinate
 	:type x0: float
 	:param ampl: amplitude of the peak
 	:type ampl: float
@@ -92,27 +92,30 @@ def lorentz(x, x0 = 1580, ampl = 10, width = 15, offset = 900):
 	area = np.pi * ampl * width / 2
 	return offset + (2/np.pi) * (area * width) / (4*(x - x0)**2 + width**2)
 
-def lorentz2(x, x01 = 2700, ampl1 = 1, width1 = 15, x02 = 2730, ampl2 = 1, width2 = 15, offset = 900):
-	"""Double Lorentz function
-
-	:return: values of a double Lorentz function
-	:rtype: float, :py:mod:`numpy` array, etc.
+def gaussian2(x, x01 = -5, ampl1 = 1, width1 = 0.1, x02 = 5, ampl2 = 1, width2 = 0.1, offset = 0):
+	"""Double Gaussian function
 
 	:param x: values for the x coordinate
 	:type x: float, :py:mod:`numpy` array, etc.
-	:param x0: shift along the `x` corrdinate
-	:type x0: float
-	:param area: area of the peak
-	:type area: float
-	:param width: width (FWHM) of the peak
-	:type width: float
-	:param offset: offset along the function value
-	:type offset: float
-	
+	:param x01: position of the peak, defaults to -5
+	:type x01: float, optional
+	:param ampl1: amplitude of the peak, defaults to 1
+	:type ampl1: float, optional
+	:param width1: width of the peak, defaults to 10
+	:type width1: float, optional
+	:param x02: position of the peak, defaults to 5
+	:type x02: float, optional
+	:param ampl2: amplitude of the peak, defaults to 1
+	:type ampl2: float, optional
+	:param width2: width of the peak, defaults to 10
+	:type width2: float, optional
+	:param offset: offset, defaults to 0
+	:type offset: float, optional
+
+	:return: values of a double Gaussian function
+	:rtype: float, :py:mod:`numpy` array, etc.
 	"""
-	area1 = np.pi * ampl1 * width1 / 2
-	area2 = np.pi * ampl2 * width2 / 2
-	return offset + (2/np.pi) * (area1 * width1) / (4*(x - x01)**2 + width1**2) + (2/np.pi) * (area2 * width2) / (4*(x - x02)**2 + width2**2)
+	return offset + ampl1 * np.exp(-2*np.log(2)*(x - x01)**2 / (width1**2)) + ampl2 * np.exp(-2*np.log(2)*(x - x02)**2 / (width2**2))
 
 def polynomial_fit(order, x_data, y_data):
 	"""Polinomial fit to `x_data`, `y_data`
@@ -276,12 +279,12 @@ def bgsubtract(x_data, y_data, polyorder = 3, toplot = False, fitmask = None, hm
 
 	return y_data_nobg, bg_values, coeff, params_used_at_run, mask, covar
 
-def peakfit(xrobj, func = lorentz, fitresult = None, stval = None, bounds = None, toplot = False, width = None, height = None, **kwargs):
+def peakfit(xrobj, func = gaussian, fitresult = None, stval = None, bounds = None, toplot = False, pos_x = None, pos_y = None, **kwargs):
 	"""Fitting a function to peaks in the data contained in ``xrobj``.
 
 	:param xrobj: :py:mod:`xarray` DataArray, of a single spectrum or a map.
 	:type xrobj: :py:mod:`xarray`
-	:param func: function to be used for fitting, defaults to lorentz
+	:param func: function to be used for fitting, defaults to gaussian
 	:type func: function, optional
 	:param fitresult: an :py:mod:`xarray` Dataset of a previous fit calculation, with matching dimensions. If this is passed to :func:`peakfit`, the fit calculation in skipped and the passed Dataset is used.
 	:type fitresult: :py:mod:`xarray` Dataset, optional
@@ -291,10 +294,10 @@ def peakfit(xrobj, func = lorentz, fitresult = None, stval = None, bounds = None
 	:type bounds: dictionary of ``func`` parameters, with tuples containing lower and upper bounds, optional
 	:param toplot: plot the fit result, defaults to ``False``
 	:type toplot: boolean, optional
-	:param width: width parameter of an :py:mod:`xarray` map to be used in conjunction with ``toplot = True``
-	:type width: `int` or `float`, optional
-	:param height: height parameter of an :py:mod:`xarray` map to be used in conjunction with ``toplot = True``
-	:type height: `int` or `float`, optional
+	:param pos_x: pos_x parameter of an :py:mod:`xarray` map to be used in conjunction with ``toplot = True``
+	:type pos_x: `int` or `float`, optional
+	:param pos_y: pos_y parameter of an :py:mod:`xarray` map to be used in conjunction with ``toplot = True``
+	:type pos_y: `int` or `float`, optional
 	
 	:return: fitted parameters of ``func`` and covariances in a Dataset
 	:rtype: :py:mod:`xarray` Dataset
@@ -309,10 +312,9 @@ def peakfit(xrobj, func = lorentz, fitresult = None, stval = None, bounds = None
 
 	.. note::
 
-		- Use ``toplot`` = `True` to tweak the starting values. If ``toplot`` = `True`, in case of a map, if no ``width`` and ``height`` are specified, the middle of the map is used for plotting.
+		- Use ``toplot`` = `True` to tweak the starting values. If ``toplot`` = `True`, in case of a map, if no ``pos_x`` and ``pos_y`` are specified, the middle of the map is used for plotting.
 		- Passing a ``bounds`` dictionary to :func:`peakfit` seems to increase the fitting time significantly. This might be an issue with :py:mod:`xarray.DataArray.curvefit`.
 		- By passing a previous fit result, using the optional parameter ``fitresult``, we can just plot the fit result at multiple regions of the map.
-		- In case of using double Lorentz fitting, the names of the parameters change! See: :func:`lorentz2`.
 
 	.. seealso::
 
@@ -350,29 +352,29 @@ def peakfit(xrobj, func = lorentz, fitresult = None, stval = None, bounds = None
 	# plot the resulting fit
 	if toplot is True:
 		#check if the xrobj is a single spectrum or map
-		if 'width' in xrobj.dims:
+		if 'specpos_x' in xrobj.dims:
 			# it's a map
-			if (width is not None) and (height is not None):
+			if (pos_x is not None) and (pos_y is not None):
 				# get coordinates to plot, or take the middle spectrum
-				plotwidth = width
-				plotheight = height
+				plotpos_x = pos_x
+				plotpos_y = pos_y
 			else:
-				wmin = np.min(xrobj.width.data)
-				wmax = np.max(xrobj.width.data)
-				hmin = np.min(xrobj.height.data)
-				hmax = np.max(xrobj.height.data)
-				plotwidth = (wmax - wmin)/2 + wmin
-				plotheight = (hmax - hmin)/2 + hmin
+				wmin = np.min(xrobj.specpos_x.data)
+				wmax = np.max(xrobj.specpos_x.data)
+				hmin = np.min(xrobj.specpos_y.data)
+				hmax = np.max(xrobj.specpos_y.data)
+				plotpos_x = (wmax - wmin)/2 + wmin
+				plotpos_y = (hmax - hmin)/2 + hmin
 			
-			paramnames = fit['curvefit_coefficients'].sel(width = plotwidth, height = plotheight, method = 'nearest').param.values
-			funcparams = fit['curvefit_coefficients'].sel(width = plotwidth, height = plotheight, method = 'nearest').data
+			paramnames = fit['curvefit_coefficients'].sel(specpos_x = plotpos_x, specpos_y = plotpos_y, method = 'nearest').param.values
+			funcparams = fit['curvefit_coefficients'].sel(specpos_x = plotpos_x, specpos_y = plotpos_y, method = 'nearest').data
 			# plot the data
-			xrobj.sel(width = plotwidth, height = plotheight, method = 'nearest').plot(color = 'black', marker = '.', lw = 0, label = 'data')			
+			xrobj.sel(specpos_x = plotpos_x, specpos_y = plotpos_y, method = 'nearest').plot(color = 'black', marker = '.', lw = 0, label = 'data')			
 		else:
 			paramnames = fit['curvefit_coefficients'].param.values
 			funcparams = fit['curvefit_coefficients'].data
 			# plot the data
-			xrobj.plot(color = 'black', marker = '.', lw = 0, label = 'data')
+			xrobj.plot(marker = 'o', ls = '-', color = 'black', lw = 1, label = 'data')
 
 		# print the starting and fitted values of the parameters
 		print('Values of starting parameters: \n', stval, '\n')
@@ -382,14 +384,14 @@ def peakfit(xrobj, func = lorentz, fitresult = None, stval = None, bounds = None
 
 		biasmin = min(xrobj.bias.data)
 		biasmax = max(xrobj.bias.data)
-		bias_resample = np.linspace(biasmin, biasmax, num = int((biasmax - biasmin)*100))
+		bias_resample = np.linspace(biasmin, biasmax, num = int((biasmax - biasmin)*500))
 		
 		funcvalues = func(bias_resample, *funcparams)
 		# set plotting variables based on the datapoints
 		# this should be the bias of the peak maximum if the fit was successful
 		fitpeakpos = bias_resample[np.argmax(funcvalues)]
-		plotarea_x = 100
-		plotarea_y = [0.8*np.min(funcvalues), 1.1*np.max(funcvalues)]
+		plotarea_x = (biasmax - biasmin)/2
+		plotarea_y = [1.2*np.min(xrobj.data), 1.2*np.max(xrobj.data)]
 
 		pl.plot(bias_resample, funcvalues, color = 'red', lw = 3, alpha = 0.5, label = 'fit')
 		pl.xlim([fitpeakpos - plotarea_x, fitpeakpos + plotarea_x])
