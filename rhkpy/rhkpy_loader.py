@@ -100,31 +100,37 @@ def _checkrepetitions(stmdata_object):
 	reps = int(reps / (stmdata_object.alternate + 1))
 	return reps
 
-
 def _checkdatatype(stmdata_object):
-	# Look at the metadata and structure of spectra coordinates to determine the type of file being worked with
+	# check if the list of keys in the spym data contain 'Current'
+	# If yes, it is not a pure topo image
 	l = list(stmdata_object.spymdata.keys())
-	if stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 7:
-		stmdata_object.spectype = 'iv'
-	elif stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 8:
-		stmdata_object.spectype = 'iz'
-	elif stmdata_object.spymdata[l[-1]].attrs['RHK_LineType'] == 0:
+	if 'Current' in l:
+		# it's a single spec, line spec or map
+		if stmdata_object.spymdata['Current'].attrs['RHK_PageType'] == 38:
+			stmdata_object.datatype = 'spec'
+			# determine if it's Iz or dI/dV
+			if stmdata_object.spymdata['Current'].attrs['RHK_LineType'] == 7:
+				stmdata_object.spectype = 'iv'
+			elif stmdata_object.spymdata['Current'].attrs['RHK_LineType'] == 8:
+				stmdata_object.spectype = 'iz'
+		elif stmdata_object.spymdata['Current'].attrs['RHK_PageType'] == 16:
+			# this can be either a line spectrum or a map
+			# decide based on the aspect ratio of the spectroscopy tip positions
+			xcoo = np.array(stmdata_object.spymdata['Current'].attrs['RHK_SpecDrift_Xcoord'])
+			ycoo = np.array(stmdata_object.spymdata['Current'].attrs['RHK_SpecDrift_Ycoord'])
+			if _aspect_ratio(xcoo, ycoo) > 10:
+				stmdata_object.datatype = 'line'
+			else:
+				stmdata_object.datatype = 'map'
+			# determine if it's Iz or dI/dV
+			if stmdata_object.spymdata['Current'].attrs['RHK_LineType'] == 7:
+				stmdata_object.spectype = 'iv'
+			elif stmdata_object.spymdata['Current'].attrs['RHK_LineType'] == 8:
+				stmdata_object.spectype = 'iz'
+	else:
+		stmdata_object.datatype = 'image'
 		stmdata_object.spectype = None
 	
-	if stmdata_object.spymdata[l[-1]].attrs['RHK_PageType'] == 1:
-		stmdata_object.datatype = 'image'
-	elif stmdata_object.spymdata[l[-1]].attrs['RHK_PageType'] == 38:
-		stmdata_object.datatype = 'spec'
-	elif stmdata_object.spymdata[l[-1]].attrs['RHK_PageType'] == 16:
-		# this can be either a line spectrum or a map
-		# decide based on the aspect ratio of the spectroscopy tip positions
-		xcoo = np.array(stmdata_object.spymdata[l[-1]].attrs['RHK_SpecDrift_Xcoord'])
-		ycoo = np.array(stmdata_object.spymdata[l[-1]].attrs['RHK_SpecDrift_Ycoord'])
-		if _aspect_ratio(xcoo, ycoo) > 10:
-			stmdata_object.datatype = 'line'
-		else:
-			stmdata_object.datatype = 'map'
-
 	return stmdata_object.datatype, stmdata_object.spectype
 
 
@@ -138,12 +144,14 @@ def _aspect_ratio(x, y):
     aspect = max(eigvals) / min(eigvals)
     return aspect
 
+
 def _get_filename(s):
 	# If the string ends with a slash or backslash, remove it first
     s = s.rstrip("/\\")
     # Then, match any character other than backslash or slash until the end of the string
     match = re.search(r'[^/\\]+$', s)
     return match.group(0) if match else None
+
 
 def _load_specmap(stmdata_object):
 	# total number of spectra in one postion of the tip
