@@ -19,7 +19,7 @@ class rhkdata:
 	"""
 	A container for the xarray based structure of the RHK data.
 	"""
-	def __init__(self, filename, repetitions = 0, alternate = True, datatype = None, **kwargs):
+	def __init__(self, filename, repetitions = 0, alternate = True, datatype = None, spectype = None, **kwargs):
 
 		if isinstance(alternate, bool) == False:
 			print("alternate needs to be a bool variable: True or False. Default is True")
@@ -31,12 +31,13 @@ class rhkdata:
 
 		# Load the data using spym
 		self.spymdata = load_spym(self.filename)
+
 		# check software version. Not tested for MinorVer < 6
 		l = list(self.spymdata.keys())
 		if self.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
 			print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
 
-		# check type of data contained in the file, if no type is specified
+		# check type of data and spectra contained in the file, if no type is specified
 		if datatype is None:
 			self.datatype, self.spectype = _checkdatatype(self)
 		else:
@@ -45,6 +46,7 @@ class rhkdata:
 				return
 			else:
 				self.datatype = datatype
+				self.spectype = spectype
 
 		# number of spectra at a tip position
 		# default value is 0, if this is changed, the code will use the given value, othewise it will try to infer the number of repetitions from the number of identical tip positions
