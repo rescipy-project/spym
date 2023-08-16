@@ -20,28 +20,37 @@ def conf_hvplot_defaults():
 
 def coord_to_absolute(xrobj):
 	# the xrobj passed to the function should always be and image
-	# if not hasattr(xrobj, 'image'):
-	# 	print('Wrong xarray type. The data needs to be an `image`, not `spectra`')
-	# 	return
+	if 'topography' not in xrobj.data_vars:
+		print('Wrong xarray type. The data needs to be an `image`, not `spectra`')
+		return
 	
-	# TODO here we will need to loop trough the dataarrays in xrobj
-	# for now let's just take the forward topo
-	imagedata = xrobj.data
+	# Iterating through the DAtaArrays in the Dataset
+	dataarrays = []
+	for d in xrobj.data_vars:
+		dataarrays += [d]
 
-	rotated = ndimage.rotate(
-		imagedata,
-		30,
-		reshape = True,
+	# Let's just transform the topography
+	datafw = xrobj[dataarrays[0]].sel(scandir = 'forward').data
+	databw = xrobj[dataarrays[0]].sel(scandir = 'backward').data
+
+	# rotate the data by the scan angle
+	rotatedfw = ndimage.rotate(
+		datafw,
+		xrobj.attrs['scan angle'],
+		reshape = True, # expand
 		mode = 'constant',
-		cval = 0
+		cval = 0 # fill with zeros, the expanded part
 		)
 	
-	# relcoord_xrobj = xrobj.copy()
-	# relcoord_xrobj.data = rotated
+	# Create new coordinates for the rotated data
 
-	return rotated
 
-def plot_spec_position(stmdata_object, repetitions, zscandir, z, **kwargs):
+	# make a new instance of the object, where we will change the coordinates
+
+	# return relcoord_xrobj
+
+
+def plot_specpos(stmdata_object, repetitions, zscandir, z, **kwargs):
 	
 	# specpos_plot = stmdata_object.spectra.isel(repetitions=repetitions, zscandir=zscandir).sel(z = z, method='nearest').hvplot(data_aspect=1, cmap='magma')
 	# return specpos_plot
@@ -58,9 +67,9 @@ def plot_spec_position(stmdata_object, repetitions, zscandir, z, **kwargs):
 	rotated_topo = ndimage.rotate(
 		stmdata_object.image.isel(scandir = 0)['topography'].data,
 		scanangle,
-		reshape=False,
-		mode='constant',
-		cval=-0.1
+		reshape = False,
+		mode = 'constant',
+		cval = 0
 		)
 
 	pl.imshow(rotated_topo, extent=ext)

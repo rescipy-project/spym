@@ -18,8 +18,42 @@ from .rhkpy_process import *
 class rhkdata:
 	"""
 	A container for the xarray based structure of the RHK data.
+
+	:param filename: filename of the "sm4" file to be loaded
+	:type filename: str
+	:param repetitions: The number of repeated aquisitions of spectra in tip position, defaults to 0
+	:type repetitions: int, optional
+	:param alternate: `True` if the bias is swept forward and backward, `False` if not, defaults to True
+	:type alternate: bool, optional
+	:param datatype: datatype, defaults to None
+	:type datatype: str, optional
+	:param spectype: spectrum type, defaults to None
+	:type spectype: str, optional
+
+	Some variables of the :class:`rhkdata` class:
+
+	:var filename: (type str) filename of the "sm4" file
+	:var image: (type :py:mod:`xarray` Dataset) Dataset containing the image data
+	:var spectra: (type :py:mod:`xarray` Dataset) Dataset containing the spectroscopy data
+	:var spymdata: (type :py:mod:`spym` instance) Dataset, as loaded by the :py:mod:`spym` module
+
+	All the variables can be listed by calling: :class:`rhkdata.print_info`.
+
+	.. note::
+		Optional parameters are not needed, they are just present for debugging purposes. Their values are inferred from the sm4 file.
+	
+	:Example:
+		
+		.. code-block:: python
+
+			import rhkpy
+
+			# example coming soon
+
 	"""
 	def __init__(self, filename, repetitions = 0, alternate = True, datatype = None, spectype = None, **kwargs):
+		"""Initialize the :class:`rhkdata` instance
+		"""		
 
 		if isinstance(alternate, bool) == False:
 			print("alternate needs to be a bool variable: True or False. Default is True")
@@ -76,18 +110,27 @@ class rhkdata:
 			self = _load_image(self)
 
 	def print_info(self):
-		"""List the variables and functions of the :class:`rhkdata` instance.
-		"""		
+		"""List the variables of the :class:`rhkdata` instance.
+		"""
 		for item in self.__dict__:
 			print(item)
+		if 'image' in self.__dict__:
+			print('\nimage:')
+			for item in self.image.data_vars:
+				print('\t', item)
+		if 'spectra' in self.__dict__:
+			print('\nspectra:')
+			for item in self.spectra.data_vars:
+				print('\t', item)
 		print('\nspymdata:')
 		for item in self.spymdata:
 			print('\t', item)
 
-	def specpos(self, repetitions=0, zscandir=0, z=0, **kwargs):		
+	def plot_specpos(self, repetitions = 0, zscandir = 0, z = 0, **kwargs):		
 		# plot the positions of spectra on a topography image
-		return plot_spec_position(self, repetitions=repetitions, zscandir=zscandir, z=z)
+		return plot_specpos(self, repetitions = repetitions, zscandir = zscandir, z = z)
 
+### internal functions -----------------------------------------------------------
 
 def _checkrepetitions(stmdata_object):
 	coordlist = stmdata_object.spymdata.Current.attrs['RHK_SpecDrift_Xcoord']
@@ -720,6 +763,15 @@ def _xr_image(stmdata_object):
 	liafw = stmdata_object.spymdata.LIA_Current_Forward
 	liabw = stmdata_object.spymdata.LIA_Current_Backward
 
+	# The image data also needs to be flipped along the slow scan direction,
+	# so that it shows up as the RHK Rev software would display it, when plotting with xarrat.plot().
+	topofw = np.flipud(topofw)
+	topobw = np.flipud(topobw)
+	currfw = np.flipud(currfw)
+	currbw = np.flipud(currbw)
+	liafw = np.flipud(liafw)
+	liabw = np.flipud(liabw)
+
 	# coordinates
 	# absolute values should be found by adding the X Y offsets
 	xoff = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Xoffset']
@@ -768,6 +820,8 @@ def _xr_image(stmdata_object):
 	xrimage.coords['y'].attrs['units'] = 'nm'
 	xrimage.coords['x'].attrs['long units'] = 'nanometer'
 	xrimage.coords['y'].attrs['long units'] = 'nanometer'
+	xrimage.coords['x'].attrs['note'] = 'slow scan direction'
+	xrimage.coords['y'].attrs['note'] = 'fast scan direction'
 
 	stmdata_object.image = xrimage
 	return stmdata_object
