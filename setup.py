@@ -10,7 +10,7 @@ setup(
         "numpy",
         "pandas",
         "scipy",
-        "xarray",
+        "xarray>=2023.7.0",
         "hvplot"
     ],
     description = "A python package for processing Scanning Tunneling Microscopy (STM) data from RHK, based on the spym project.",

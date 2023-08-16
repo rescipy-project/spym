@@ -43,8 +43,16 @@ def coord_to_absolute(xrobj):
 		)
 	
 	# Create new coordinates for the rotated data
+	# Get the sizes of the x and y coordinates
+	xlen = np.max(xrobj.x.data) - np.min(xrobj.x.data)
+	ylen = np.max(xrobj.y.data) - np.min(xrobj.y.data)
 
-
+	# the diagonal is then
+	diag = np.sqrt(xlen**2 + ylen**2)
+	# get the angle between the diagonal and the base of the image (y coo). 45 deg for a square
+	theta = np.arctan(xlen/ylen)
+	# get the projection of the diagonal onto the y coordinate. This gives you the new "bounding box size" of the rotated image
+	# newylen = diag * np.cos(theta - )
 	# make a new instance of the object, where we will change the coordinates
 
 	# return relcoord_xrobj
