@@ -24,7 +24,10 @@ def coord_to_absolute(xrobj):
 		print('Wrong xarray type. The data needs to be an `image`, not `spectra`')
 		return
 	
-	# Iterating through the DAtaArrays in the Dataset
+	# get scan angle
+	scangle = xrobj.attrs['scan angle']
+
+	# Iterating through the DataArrays in the Dataset
 	dataarrays = []
 	for d in xrobj.data_vars:
 		dataarrays += [d]
@@ -36,7 +39,7 @@ def coord_to_absolute(xrobj):
 	# rotate the data by the scan angle
 	rotatedfw = ndimage.rotate(
 		datafw,
-		xrobj.attrs['scan angle'],
+		scangle,
 		reshape = True, # expand
 		mode = 'constant',
 		cval = 0 # fill with zeros, the expanded part
@@ -52,7 +55,7 @@ def coord_to_absolute(xrobj):
 	# get the angle between the diagonal and the base of the image (y coo). 45 deg for a square
 	theta = np.arctan(xlen/ylen)
 	# get the projection of the diagonal onto the y coordinate. This gives you the new "bounding box size" of the rotated image
-	# newylen = diag * np.cos(theta - )
+	newylen = diag * np.cos(theta - scangle)
 	# make a new instance of the object, where we will change the coordinates
 
 	# return relcoord_xrobj
