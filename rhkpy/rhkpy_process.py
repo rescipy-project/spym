@@ -25,43 +25,118 @@ def coord_to_absolute(xrobj):
 		return
 	
 	# get scan angle
-	scangle = xrobj.attrs['scan angle']
+	scangle = xrobj.attrs['scan angle'] * np.pi / 180 # in radians
 
-	# Iterating through the DataArrays in the Dataset
-	dataarrays = []
-	for d in xrobj.data_vars:
-		dataarrays += [d]
+	# Get the numpy data
+	datatopofw = xrobj['topography'].sel(scandir = 'forward').data
+	datatopobw = xrobj['topography'].sel(scandir = 'backward').data
+	datacurrentfw = xrobj['current'].sel(scandir = 'forward').data
+	datacurrentbw = xrobj['current'].sel(scandir = 'backward').data
+	dataliafw = xrobj['lia'].sel(scandir = 'forward').data
+	dataliabw = xrobj['lia'].sel(scandir = 'backward').data
 
-	# Let's just transform the topography
-	datafw = xrobj[dataarrays[0]].sel(scandir = 'forward').data
-	databw = xrobj[dataarrays[0]].sel(scandir = 'backward').data
-
-	# rotate the data by the scan angle
-	rotatedfw = ndimage.rotate(
-		datafw,
-		scangle,
+	# rotate the data by the scan angle. Need to have negative degrees, because ndimage rotates clockwise
+	rotatedtopofw = ndimage.rotate(
+		datatopofw,
+		-scangle*180/np.pi, # needs to be in degrees
 		reshape = True, # expand
 		mode = 'constant',
-		cval = 0 # fill with zeros, the expanded part
+		cval = np.nan
 		)
-	
+	rotatedtopobw = ndimage.rotate(
+		datatopobw,
+		-scangle*180/np.pi, # needs to be in degrees
+		reshape = True, # expand
+		mode = 'constant',
+		cval = np.nan
+		)
+	rotatedcurrentfw = ndimage.rotate(
+		datacurrentfw,
+		-scangle*180/np.pi, # needs to be in degrees
+		reshape = True, # expand
+		mode = 'constant',
+		cval = np.nan
+		)
+	rotatedcurrentbw = ndimage.rotate(
+		datacurrentbw,
+		-scangle*180/np.pi, # needs to be in degrees
+		reshape = True, # expand
+		mode = 'constant',
+		cval = np.nan
+		)
+	rotatedliafw = ndimage.rotate(
+		dataliafw,
+		-scangle*180/np.pi, # needs to be in degrees
+		reshape = True, # expand
+		mode = 'constant',
+		cval = np.nan
+		)
+	rotatedliabw = ndimage.rotate(
+		dataliabw,
+		-scangle*180/np.pi, # needs to be in degrees
+		reshape = True, # expand
+		mode = 'constant',
+		cval = np.nan
+		)
+
 	# Create new coordinates for the rotated data
+	# size of a pixel in nm
+	pixelsizex = np.abs(xrobj.x.data[1] - xrobj.x.data[0])
+	pixelsizey = np.abs(xrobj.y.data[1] - xrobj.y.data[0])
+	print('pixel size:', pixelsizex, pixelsizey)
+	
 	# Get the sizes of the x and y coordinates
-	xlen = np.max(xrobj.x.data) - np.min(xrobj.x.data)
-	ylen = np.max(xrobj.y.data) - np.min(xrobj.y.data)
+	xlen = np.abs(xrobj.x.data[-1] - xrobj.x.data[0]) + pixelsizex # need to add half pixel size twice (on both sides)
+	ylen = np.abs(xrobj.y.data[-1] - xrobj.y.data[0]) + pixelsizey
+	
+	# This gives you the new "bounding box size" of the rotated image
+	newxlen = np.abs(xlen * np.sin(scangle)) + np.abs(ylen * np.sin(np.pi/2 - scangle))
+	newylen = np.abs(xlen * np.cos(scangle)) + np.abs(ylen * np.cos(np.pi/2 - scangle))
 
-	# the diagonal is then
+	# new coordinate length
+	# placing the zero in the middle of the image
+	newxx = np.linspace(-newxlen/2, newxlen/2, num = rotatedtopofw.shape[0])
+	newyy = np.linspace(-newylen/2, newylen/2, num = rotatedtopofw.shape[1])
+	# new pixel size due to rotation
+	newpixelsizex = np.abs(newxx[1] - newxx[0])
+	newpixelsizey = np.abs(newyy[1] - newyy[0])
+	print('new pixel size:', newpixelsizex, newpixelsizey)
+
+	# correction to the offet of the image, because it refers to the edge of a rotated image
+	# these are the distance to the center of the image from the edge
 	diag = np.sqrt(xlen**2 + ylen**2)
-	# get the angle between the diagonal and the base of the image (y coo). 45 deg for a square
-	theta = np.arctan(xlen/ylen)
-	# get the projection of the diagonal onto the y coordinate. This gives you the new "bounding box size" of the rotated image
-	newylen = diag * np.cos(theta - scangle)
+	offx = diag * np.cos(np.pi/4 + scangle)/2 - pixelsizex/2
+	offy = diag * np.sin(np.pi/4 + scangle)/2 - pixelsizey/2
+	print(offx, offy)
+
 	# make a new instance of the object, where we will change the coordinates
+	xrobj_abscoord = xr.Dataset(
+		data_vars = dict(
+			topography = (['y', 'x', 'scandir'], np.stack((rotatedtopofw, rotatedtopobw), axis=-1)),
+			current = (['y', 'x', 'scandir'], np.stack((rotatedcurrentfw, rotatedcurrentbw), axis=-1)),
+			lia = (['y', 'x', 'scandir'], np.stack((rotatedliafw, rotatedliabw), axis=-1))
+			),
+		coords = dict(
+			x = newxx + xrobj.attrs['xoffset'] + offx,
+			y = newyy + xrobj.attrs['yoffset'] + offy,
+			scandir = np.array(['forward', 'backward'])
+			)
+		)
+	# copy attributes from original dataset and modify them accordingly
+	xrobj_abscoord.attrs = xrobj.attrs.copy()
+	for c in xrobj.coords:
+		xrobj_abscoord.coords[c].attrs = xrobj.coords[c].attrs.copy()
+	for d in xrobj.data_vars:
+		xrobj_abscoord[d].attrs = xrobj[d].attrs.copy()
+	# append a note to the coordinate x, y attributes
+	xrobj_abscoord.attrs['comment'] = 'absolute coordinates'
+	xrobj_abscoord.coords['x'].attrs['note'] += '\nabsolute coordinates\n'
+	xrobj_abscoord.coords['y'].attrs['note'] += '\nabsolute coordinates\n'
 
-	# return relcoord_xrobj
+	return xrobj_abscoord
 
 
-def plot_specpos(stmdata_object, repetitions, zscandir, z, **kwargs):
+def plot_specpos(stmdata_object):
 	
 	# specpos_plot = stmdata_object.spectra.isel(repetitions=repetitions, zscandir=zscandir).sel(z = z, method='nearest').hvplot(data_aspect=1, cmap='magma')
 	# return specpos_plot

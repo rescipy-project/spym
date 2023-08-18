@@ -126,9 +126,9 @@ class rhkdata:
 		for item in self.spymdata:
 			print('\t', item)
 
-	def plot_specpos(self, repetitions = 0, zscandir = 0, z = 0, **kwargs):		
+	def plot_specpos(self):		
 		# plot the positions of spectra on a topography image
-		return plot_specpos(self, repetitions = repetitions, zscandir = zscandir, z = z)
+		return plot_specpos(self)
 
 ### internal functions -----------------------------------------------------------
 
@@ -476,9 +476,7 @@ def _xr_spec_iv(stmdata_object):
 	currentfw = currentarray[:, 0::2]
 	currentbw = currentarray[:, 1::2]
 
-	"""
-	Coordinates of the spectroscopy map
-	"""
+	# Coordinates of the spectroscopy map
 	# 'RHK_SpecDrift_Xcoord' are the coordinates of the spectra.
 	# This contains the coordinates in the order that the spectra are in. 
 	# Here we only need the first x and y components
@@ -488,9 +486,7 @@ def _xr_spec_iv(stmdata_object):
 	tempx = xcoo[0]
 	tempy = ycoo[0]
 
-	"""
-	Constructing the xarray Dataset 
-	"""
+	# Constructing the xarray Dataset 
 	# stacking the forward and backward bias sweeps and using the scandir coordinate
 	# also adding specific attributes
 	xrspec = xr.Dataset(
@@ -756,6 +752,7 @@ def _xr_image(stmdata_object):
 	topobw, bg = align(topobw, baseline='median')
 	topofw, bg = plane(topofw)
 	topobw, bg = plane(topobw)
+
 	# current
 	currfw = stmdata_object.spymdata.Current_Forward
 	currbw = stmdata_object.spymdata.Current_Backward
@@ -764,7 +761,9 @@ def _xr_image(stmdata_object):
 	liabw = stmdata_object.spymdata.LIA_Current_Backward
 
 	# The image data also needs to be flipped along the slow scan direction,
-	# so that it shows up as the RHK Rev software would display it, when plotting with xarrat.plot().
+	# so that it shows up as the RHK Rev software would display it, when plotting with xarray.plot().
+	# this behaviour is because xarray.plot, uses by default pcolormesh() to plot.
+	# pcolormesh() flips the data along the slow scan direction. imshow() plots it the way it looks in RHK Rev and Gwyddion.
 	topofw = np.flipud(topofw)
 	topobw = np.flipud(topobw)
 	currfw = np.flipud(currfw)
@@ -783,8 +782,8 @@ def _xr_image(stmdata_object):
 
 	# calculate the relative coordinates, including rotation
 	# the offset refers to the corner of the image, so we need to account for that
-	xlength = abs(xx[-1] - xx[0])
-	ylength = abs(yy[-1] - yy[0])
+	xlength = np.abs(xx[-1] - xx[0])
+	ylength = np.abs(yy[-1] - yy[0])
 
 	xoff -= xlength/2
 	yoff -= ylength/2
@@ -792,9 +791,9 @@ def _xr_image(stmdata_object):
 	# create xarray Dataset of the image data
 	xrimage = xr.Dataset(
 		data_vars = dict(
-			topography = (['x', 'y', 'scandir'], np.stack((topofw.data, topobw.data), axis=-1)*10**9),
-			current = (['x', 'y', 'scandir'], np.stack((currfw.data, currbw.data), axis=-1)*10**12),
-			lia = (['x', 'y', 'scandir'], np.stack((liafw.data, liabw.data), axis=-1)*10**12)
+			topography = (['y', 'x', 'scandir'], np.stack((topofw.data, topobw.data), axis=-1)*10**9),
+			current = (['y', 'x', 'scandir'], np.stack((currfw.data, currbw.data), axis=-1)*10**12),
+			lia = (['y', 'x', 'scandir'], np.stack((liafw.data, liabw.data), axis=-1)*10**12)
 			),
 		coords = dict(
 			x = xx*10**9,
@@ -802,14 +801,14 @@ def _xr_image(stmdata_object):
 			scandir = np.array(['forward', 'backward'])
 			),
 		attrs = dict(
-			filename = stmdata_object.filename,
+			filename = _get_filename(stmdata_object.filename),
 			xoffset = xoff*10**9,
 			yoffset = yoff*10**9,
 			xoffset_units = 'nm',
 			yoffset_units = 'nm'
 			)
 		)
-	
+
 	xrimage['topography'].attrs['units'] = 'nm'
 	xrimage['topography'].attrs['long units'] = 'nanometer'
 	xrimage['lia'].attrs['units'] = 'pA'
