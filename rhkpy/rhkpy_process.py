@@ -19,13 +19,21 @@ def conf_hvplot_defaults():
 		) # can't set default colormap with this
 
 def coord_to_absolute(xrobj):
+	"""Return a new :py:mod:`xarray` instance, with the coordinates updated to reflect the abolute tip position. This includes X, Y offset and rotation.
+
+	:param xrobj: :py:mod:`xarray` variable of an :class:`rhkdata` object.
+	:type xrobj: :py:mod:`xarray` Dataset
+	
+	:return: :py:mod:`xarray` instance, with teh coordinates shifted to absolute tip positions
+	:rtype: :py:mod:`xarray` Dataset
+	"""	
 	# the xrobj passed to the function should always be and image
 	if 'topography' not in xrobj.data_vars:
 		print('Wrong xarray type. The data needs to be an `image`, not `spectra`')
 		return
 	
 	# get scan angle
-	scangle = xrobj.attrs['scan angle'] * np.pi / 180 # in radians
+	scangle = xrobj.attrs['scan angle']*np.pi/180 # in radians
 
 	# Get the numpy data
 	datatopofw = xrobj['topography'].sel(scandir = 'forward').data
@@ -83,15 +91,18 @@ def coord_to_absolute(xrobj):
 	# size of a pixel in nm
 	pixelsizex = np.abs(xrobj.x.data[1] - xrobj.x.data[0])
 	pixelsizey = np.abs(xrobj.y.data[1] - xrobj.y.data[0])
-	print('pixel size:', pixelsizex, pixelsizey)
 	
 	# Get the sizes of the x and y coordinates
 	xlen = np.abs(xrobj.x.data[-1] - xrobj.x.data[0]) + pixelsizex # need to add half pixel size twice (on both sides)
 	ylen = np.abs(xrobj.y.data[-1] - xrobj.y.data[0]) + pixelsizey
 	
 	# This gives you the new "bounding box size" of the rotated image
-	newxlen = np.abs(xlen * np.sin(scangle)) + np.abs(ylen * np.sin(np.pi/2 - scangle))
-	newylen = np.abs(xlen * np.cos(scangle)) + np.abs(ylen * np.cos(np.pi/2 - scangle))
+	# newxlen = np.abs(xlen * np.sin(scangle)) + np.abs(ylen * np.sin(np.pi/2 - scangle))
+	# newylen = np.abs(xlen * np.cos(scangle)) + np.abs(ylen * np.cos(np.pi/2 - scangle))
+	newxlen = rotatedtopofw.shape[0] * pixelsizex
+	newylen = rotatedtopofw.shape[1] * pixelsizey
+
+	print('newlengths:', newxlen, newylen)
 
 	# new coordinate length
 	# placing the zero in the middle of the image
@@ -100,13 +111,12 @@ def coord_to_absolute(xrobj):
 	# new pixel size due to rotation
 	newpixelsizex = np.abs(newxx[1] - newxx[0])
 	newpixelsizey = np.abs(newyy[1] - newyy[0])
-	print('new pixel size:', newpixelsizex, newpixelsizey)
 
-	# correction to the offet of the image, because it refers to the edge of a rotated image
-	# these are the distance to the center of the image from the edge
+	# correction to the offet of the image
+	# need to include correction to rotation, and a rotated shift
 	diag = np.sqrt(xlen**2 + ylen**2)
-	offx = diag * np.cos(np.pi/4 + scangle)/2 - pixelsizex/2
-	offy = diag * np.sin(np.pi/4 + scangle)/2 - pixelsizey/2
+	offx = diag * np.sin(scangle/2) * np.cos(scangle/2 - np.pi/4) + diag * np.cos(np.pi/4 + scangle)/2 - pixelsizex
+	offy = diag * np.sin(scangle/2) * np.sin(scangle/2 - np.pi/4) + diag * np.sin(np.pi/4 + scangle)/2 - pixelsizey
 	print(offx, offy)
 
 	# make a new instance of the object, where we will change the coordinates
@@ -130,8 +140,8 @@ def coord_to_absolute(xrobj):
 		xrobj_abscoord[d].attrs = xrobj[d].attrs.copy()
 	# append a note to the coordinate x, y attributes
 	xrobj_abscoord.attrs['comment'] = 'absolute coordinates'
-	xrobj_abscoord.coords['x'].attrs['note'] += '\nabsolute coordinates\n'
-	xrobj_abscoord.coords['y'].attrs['note'] += '\nabsolute coordinates\n'
+	xrobj_abscoord.coords['x'].attrs['note'] += 'absolute coordinates\n'
+	xrobj_abscoord.coords['y'].attrs['note'] += 'absolute coordinates\n'
 
 	return xrobj_abscoord
 

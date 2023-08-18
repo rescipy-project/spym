@@ -819,8 +819,8 @@ def _xr_image(stmdata_object):
 	xrimage.coords['y'].attrs['units'] = 'nm'
 	xrimage.coords['x'].attrs['long units'] = 'nanometer'
 	xrimage.coords['y'].attrs['long units'] = 'nanometer'
-	xrimage.coords['x'].attrs['note'] = 'slow scan direction'
-	xrimage.coords['y'].attrs['note'] = 'fast scan direction'
+	xrimage.coords['x'].attrs['note'] = 'slow scan direction\n'
+	xrimage.coords['y'].attrs['note'] = 'fast scan direction\n'
 
 	stmdata_object.image = xrimage
 	return stmdata_object
