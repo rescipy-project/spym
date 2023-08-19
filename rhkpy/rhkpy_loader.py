@@ -709,7 +709,7 @@ def _xr_spec_iz(stmdata_object):
 	# Here we only need the first x and y components
 	xcoo = np.array(stmdata_object.spymdata.Current.attrs['RHK_SpecDrift_Xcoord'])
 	ycoo = np.array(stmdata_object.spymdata.Current.attrs['RHK_SpecDrift_Ycoord'])
-	# reshaping the coordinates similarly to the spectra. Need only every second coordinate
+	# reshaping the coordinates similarly to the spectra.
 	tempx = xcoo[0]
 	tempy = ycoo[0]
 
@@ -720,7 +720,9 @@ def _xr_spec_iz(stmdata_object):
 	# also adding specific attributes
 	xrspec = xr.Dataset(
 		data_vars = dict(
-			current = (['z', 'repetitions', 'zscandir'], np.stack((currentfw, currentbw), axis=-1)*10**12)
+			current = (['z', 'repetitions', 'zscandir'], np.stack((currentfw, currentbw), axis=-1)*10**12),
+			x = tempx*10**9,
+			y = tempy*10**9
 			),
 		coords = dict(
 			z = stmdata_object.spymdata.coords['Current_x'].data*10**9,
