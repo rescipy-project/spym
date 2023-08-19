@@ -250,7 +250,10 @@ def _load_spec(stmdata_object):
 
 def _load_image(stmdata_object):
 	# load the image data
-	stmdata_object = _xr_image(stmdata_object)
+	if stmdata_object.datatype == 'image' or stmdata_object.datatype == 'map':
+		stmdata_object = _xr_image(stmdata_object)
+	elif stmdata_object.datatype == 'line':
+		stmdata_object = _xr_image_line(stmdata_object)
 	# add metadata
 	stmdata_object = _add_image_metadata(stmdata_object)
 	return stmdata_object
@@ -405,9 +408,7 @@ def _xr_line_iv(stmdata_object):
 	currentfw = tempcurr[:, :, 0::2]
 	currentbw = tempcurr[:, :, 1::2]
 
-	"""
-	Coordinates of the spectroscopy map
-	"""
+	# Coordinates of the spectroscopy map
 	# 'RHK_SpecDrift_Xcoord' are the coordinates of the spectra.
 	# This contains the coordinates in the order that the spectra are in. 
 	xcoo = np.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Xcoord'])
@@ -509,6 +510,10 @@ def _xr_spec_iv(stmdata_object):
 	xrspec.attrs['speccoord_x units'] = 'nm'
 	xrspec.attrs['speccoord_y units'] = 'nm'
 
+	xrspec['x'].attrs['units'] = 'nm'
+	xrspec['y'].attrs['units'] = 'nm'
+	xrspec['x'].attrs['long units'] = 'nanometer'
+	xrspec['y'].attrs['long units'] = 'nanometer'
 	xrspec['lia'].attrs['units'] = 'pA'
 	xrspec['lia'].attrs['long units'] = 'picoampere'
 	xrspec['current'].attrs['units'] = 'pA'
@@ -732,6 +737,10 @@ def _xr_spec_iz(stmdata_object):
 		attrs = dict(filename = _get_filename(stmdata_object.filename))
 	)
 
+	xrspec['x'].attrs['units'] = 'nm'
+	xrspec['y'].attrs['units'] = 'nm'
+	xrspec['x'].attrs['long units'] = 'nanometer'
+	xrspec['y'].attrs['long units'] = 'nanometer'
 	xrspec.attrs['speccoord_x'] = tempx*10**9
 	xrspec.attrs['speccoord_y'] = tempy*10**9
 	xrspec.attrs['speccoord_x units'] = 'nm'
@@ -823,8 +832,85 @@ def _xr_image(stmdata_object):
 	xrimage.coords['y'].attrs['units'] = 'nm'
 	xrimage.coords['x'].attrs['long units'] = 'nanometer'
 	xrimage.coords['y'].attrs['long units'] = 'nanometer'
-	xrimage.coords['x'].attrs['note'] = 'slow scan direction\n'
-	xrimage.coords['y'].attrs['note'] = 'fast scan direction\n'
+	xrimage.coords['x'].attrs['note'] = 'fast scan direction\n'
+	xrimage.coords['y'].attrs['note'] = 'slow scan direction\n'
+
+	stmdata_object.image = xrimage
+	return stmdata_object
+
+
+def _xr_image_line(stmdata_object):
+	# topography
+	topofw = stmdata_object.spymdata.Topography_Forward
+	topobw = stmdata_object.spymdata.Topography_Backward
+	
+	# current
+	currfw = stmdata_object.spymdata.Current_Forward
+	currbw = stmdata_object.spymdata.Current_Backward
+	# lia
+	liafw = stmdata_object.spymdata.LIA_Current_Forward
+	liabw = stmdata_object.spymdata.LIA_Current_Backward
+
+	# The image data also needs to be flipped along the slow scan direction,
+	# so that it shows up as the RHK Rev software would display it, when plotting with xarray.plot().
+	# this behaviour is because xarray.plot, uses by default pcolormesh() to plot.
+	# pcolormesh() flips the data along the slow scan direction. imshow() plots it the way it looks in RHK Rev and Gwyddion.
+	topofw = np.flipud(topofw)
+	topobw = np.flipud(topobw)
+	currfw = np.flipud(currfw)
+	currbw = np.flipud(currbw)
+	liafw = np.flipud(liafw)
+	liabw = np.flipud(liabw)
+
+	# coordinates
+	# absolute values should be found by adding the X Y offsets
+	xoff = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Xoffset']
+	yoff = stmdata_object.spymdata.Topography_Forward.attrs['RHK_Yoffset']
+
+	# these are the relative coordinates (from 0 to size of the image)
+	xx = stmdata_object.spymdata.Topography_Forward_x.data
+	yy = stmdata_object.spymdata.Topography_Forward_y.data
+
+	# calculate the relative coordinates, including rotation
+	# the offset refers to the corner of the image, so we need to account for that
+	xlength = np.abs(xx[-1] - xx[0])
+	ylength = np.abs(yy[-1] - yy[0])
+
+	xoff -= xlength/2
+	yoff -= ylength/2
+
+	# create xarray Dataset of the image data
+	xrimage = xr.Dataset(
+		data_vars = dict(
+			topography = (['x', 'reps', 'scandir'], np.stack((topofw.data, topobw.data), axis=-1)*10**9),
+			current = (['x', 'reps', 'scandir'], np.stack((currfw.data, currbw.data), axis=-1)*10**12),
+			lia = (['x', 'reps', 'scandir'], np.stack((liafw.data, liabw.data), axis=-1)*10**12)
+			),
+		coords = dict(
+			x = xx*10**9,
+			reps = yy,
+			scandir = np.array(['forward', 'backward'])
+			),
+		attrs = dict(
+			filename = _get_filename(stmdata_object.filename),
+			xoffset = xoff*10**9,
+			yoffset = yoff*10**9,
+			xoffset_units = 'nm',
+			yoffset_units = 'nm'
+			)
+		)
+
+	xrimage['topography'].attrs['units'] = 'nm'
+	xrimage['topography'].attrs['long units'] = 'nanometer'
+	xrimage['lia'].attrs['units'] = 'pA'
+	xrimage['lia'].attrs['long units'] = 'picoampere'
+	xrimage['current'].attrs['units'] = 'pA'
+	xrimage['current'].attrs['long units'] = 'picoampere'
+	xrimage.coords['reps'].attrs['units'] = None
+	xrimage.coords['x'].attrs['units'] = 'nm'
+	xrimage.coords['x'].attrs['long units'] = 'nanometer'
+	xrimage.coords['reps'].attrs['note'] = 'repetitions of the topography line\n'
+	xrimage.coords['x'].attrs['note'] = 'fast scan direction\n'
 
 	stmdata_object.image = xrimage
 	return stmdata_object
