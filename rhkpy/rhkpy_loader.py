@@ -17,9 +17,9 @@ from .rhkpy_process import *
 
 class rhkdata:
 	"""
-	A container for the xarray based structure of the RHK data.
+	A container for the xarray based structure of the RHK data. Loads the RHK "sm4" file from the path at: ``filename``.
 
-	:param filename: filename of the "sm4" file to be loaded
+	:param filename: path and filename of the "sm4" file to be loaded
 	:type filename: str
 	:param repetitions: The number of repeated aquisitions of spectra in tip position, defaults to 0
 	:type repetitions: int, optional
@@ -482,7 +482,7 @@ def _xr_spec_iv(stmdata_object):
 	# Here we only need the first x and y components
 	xcoo = np.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Xcoord'])
 	ycoo = np.array(stmdata_object.spymdata.LIA_Current.attrs['RHK_SpecDrift_Ycoord'])
-	# reshaping the coordinates similarly to the spectra. Need only every second coordinate
+	# reshaping the coordinates similarly to the spectra.
 	tempx = xcoo[0]
 	tempy = ycoo[0]
 
@@ -492,7 +492,9 @@ def _xr_spec_iv(stmdata_object):
 	xrspec = xr.Dataset(
 		data_vars = dict(
 			lia = (['bias', 'repetitions', 'biasscandir'], np.stack((liafw, liabw), axis=-1)*10**12),
-			current = (['bias', 'repetitions', 'biasscandir'], np.stack((currentfw, currentbw), axis=-1)*10**12)
+			current = (['bias', 'repetitions', 'biasscandir'], np.stack((currentfw, currentbw), axis=-1)*10**12),
+			x = tempx*10**9,
+			y = tempy*10**9
 			),
 		coords = dict(
 			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
