@@ -48,10 +48,44 @@ class rhkdata:
 
 			import rhkpy
 
-			# example coming soon
+			# Load dI/dV spectra, measured along a line
+			filename = 'line_9K_ABC6_2020_11_01_12_12_27_213.sm4'
+			linespec = rhkpy.rhkdata(filename)
+
+			# display the contents of the spectroscopy `xarray` instance
+			linespec.spectra
+			xarray.Dataset
+			Dimensions:
+			bias: 501dist: 64repetitions: 1biasscandir: 2
+			Coordinates: (4)
+			Data variables:
+			lia
+			(bias, dist, repetitions, biasscandir)
+			float64
+			3.585 3.779 3.353 ... 5.278 5.185
+			current
+			(bias, dist, repetitions, biasscandir)
+			float64
+			99.49 111.2 94.62 ... -133.3 -132.7
+			x
+			(dist)
+			float64
+			-37.48 -36.97 ... -5.384 -4.866
+			y
+			(dist)
+			float64
+			-173.5 -173.6 ... -179.9 -180.0
+			Indexes: (4)
+			Attributes: (15)
+
+			# select the dI/dV signal (lia) and average the forward and backward bias sweeps and repetitions
+			linespec_avg = linespec.spectra.lia.mean(dim = ['biasscandir', 'repetitions'])
+
+			# plot the dI/dV values along the remaining coordinates: bias, dist
+			linespec_avg.plot()
 
 	"""
-	def __init__(self, filename, repetitions = 0, alternate = True, datatype = None, spectype = None, **kwargs):
+	def __init__(self, filename, repetitions = 0, alternate = True, **kwargs):
 		"""Initialize the :class:`rhkdata` instance
 		"""		
 
@@ -59,6 +93,8 @@ class rhkdata:
 			print("alternate needs to be a bool variable: True or False. Default is True")
 
 		self.filename = filename
+		self.datatype = None
+		self.spectype = None
 
 		# Boolean value, True if alternate scan directions is turned on
 		self.alternate = alternate
@@ -71,16 +107,8 @@ class rhkdata:
 		if self.spymdata[l[-1]].attrs['RHK_MinorVer'] < 6:
 			print('stmdatastruct not tested for RHK Rev version < 6. Some things might not work as expected.')
 
-		# check type of data and spectra contained in the file, if no type is specified
-		if datatype is None:
-			self.datatype, self.spectype = _checkdatatype(self)
-		else:
-			if (datatype != 'map') and (datatype != 'line') and (datatype != 'spec') and (datatype != 'image'):
-				print('datatype must be either: map, line, spec or image')
-				return
-			else:
-				self.datatype = datatype
-				self.spectype = spectype
+		# check type of data and spectra contained in the file
+		self.datatype, self.spectype = _checkdatatype(self)
 
 		# number of spectra at a tip position
 		# default value is 0, if this is changed, the code will use the given value, othewise it will try to infer the number of repetitions from the number of identical tip positions
@@ -135,6 +163,14 @@ class rhkdata:
 
 		:return: :class:`rhkdata` instance, with the same data and metadata, but the :class:`rhkdata.image`, :py:mod:`xarray` variable coordinates shifted to absolute tip positions.
 		:rtype: :class:`rhkdata` instance
+
+		:Example:
+		
+		.. code-block:: python
+
+			import rhkpy
+
+			# example coming soon
 		"""
 		# check if 'image' is present
 		if 'image' not in self.__dict__:
