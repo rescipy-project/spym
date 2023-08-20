@@ -1,7 +1,7 @@
 import matplotlib.pyplot as pl
 import numpy as np
 import xarray as xr
-import re
+import re, copy
 
 # import load from spym
 from spym.io import load
@@ -129,6 +129,26 @@ class rhkdata:
 	def plot_specpos(self):		
 		# plot the positions of spectra on a topography image
 		return plot_specpos(self)
+
+	def coord_to_absolute(self):
+		"""Returns a new :class:`rhkdata` instance, with the coordinates updated to reflect the abolute tip position. This includes X, Y offset and rotation.
+
+		:return: :class:`rhkdata` instance, with the same data and metadata, but the :class:`rhkdata.image`, :py:mod:`xarray` variable coordinates shifted to absolute tip positions.
+		:rtype: :class:`rhkdata` instance
+		"""
+		# check if 'image' is present
+		if 'image' not in self.__dict__:
+			print('This `rhkdata` instance does not contain an image')
+			return
+		
+		# copy the current instance
+		rhkdataobj_new = copy.deepcopy(self)
+
+		# update the coordinates
+		rhkdataobj_new.image = coord_to_absolute(self.image)
+
+		return rhkdataobj_new
+
 
 ### internal functions -----------------------------------------------------------
 

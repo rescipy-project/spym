@@ -19,12 +19,13 @@ def conf_hvplot_defaults():
 		) # can't set default colormap with this
 
 def coord_to_absolute(xrobj):
-	"""Return a new :py:mod:`xarray` instance, with the coordinates updated to reflect the abolute tip position. This includes X, Y offset and rotation.
+	"""Takes as input the :class:`rhkdata.image` variable of an :class:`rhkdata` instance.
+	Returns a new :py:mod:`xarray` instance, with the coordinates updated to reflect the abolute tip position. This includes X, Y offset and rotation.
 
-	:param xrobj: :py:mod:`xarray` variable of an :class:`rhkdata` object.
+	:param xrobj: :py:mod:`xarray` image variable of an :class:`rhkdata` object
 	:type xrobj: :py:mod:`xarray` Dataset
 	
-	:return: :py:mod:`xarray` instance, with teh coordinates shifted to absolute tip positions
+	:return: :py:mod:`xarray` :class:`rhkdata.image` instance, with the same data and metadata as the input and the coordinates shifted to absolute tip positions.
 	:rtype: :py:mod:`xarray` Dataset
 	"""	
 	# the xrobj passed to the function should always be and image
