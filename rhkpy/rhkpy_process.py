@@ -178,39 +178,6 @@ def coord_to_absolute(xrobj):
 	return xrobj_abscoord
 
 
-def plot_specpos(stmdata_object):
-	
-	# specpos_plot = stmdata_object.spectra.isel(repetitions=repetitions, zscandir=zscandir).sel(z = z, method='nearest').hvplot(data_aspect=1, cmap='magma')
-	# return specpos_plot
-
-	#### Using Matplotlib
-	xx = stmdata_object.image.coords['x'].data
-	yy = stmdata_object.image.coords['y'].data
-	dx = (xx[1] - xx[0])/2.
-	dy = (yy[1] - yy[0])/2.
-	ext = [xx[0] - dx, xx[-1] + dx, yy[0] - dy, yy[-1] + dy]
-
-	scanangle = stmdata_object.image.attrs['scan angle']
-
-	rotated_topo = ndimage.rotate(
-		stmdata_object.image.isel(scandir = 0)['topography'].data,
-		scanangle,
-		reshape = False,
-		mode = 'constant',
-		cval = 0
-		)
-
-	pl.imshow(rotated_topo, extent=ext)
-	# pl.scatter(stmdata_object.spectra['x'].data, stmdata_object.spectra['y'].data,
-	pl.scatter(stmdata_object.spectra['x'].data, stmdata_object.spectra['y'].data,
-		marker = '.',
-		alpha = 0.5,
-		color = 'r'
-		)
-	
-## peak finding and background subtraction
-
-
 def gaussian(x, x0 = 0, ampl = 2, width = 0.1, offset = 0):
 	"""Gaussian function. Width and amplitude parameters have the same meaning as for :func:`lorentz`.
 
@@ -614,3 +581,7 @@ def polyflatten(xrobj, field_type = 'topography', **kwargs):
 
 	return flatxrobj
 
+## plotting and data visualization -------------------------------------------
+
+def navigation():
+	pass

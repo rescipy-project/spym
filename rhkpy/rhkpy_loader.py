@@ -227,6 +227,10 @@ class rhkdata:
 
 		return flattened_rhkdataobj
 
+	
+	def qplot(self):
+		pass
+
 
 ### internal functions -----------------------------------------------------------
 
@@ -923,6 +927,14 @@ def _xr_image(stmdata_object):
 			yoffset_units = 'nm'
 			)
 		)
+
+	# calculate image size
+	pixelsizex = np.abs(xx[1] - xx[0])
+	pixelsizey = np.abs(yy[1] - yy[0])
+	xrimage.attrs['size_x'] = round((xlength + pixelsizex)*10**9, 3)
+	xrimage.attrs['size_y'] = round((ylength + pixelsizey)*10**9, 3)
+	xrimage.attrs['size_x units'] = 'nm'
+	xrimage.attrs['size_y units'] = 'nm'
 
 	xrimage['topography'].attrs['units'] = 'nm'
 	xrimage['topography'].attrs['long units'] = 'nanometer'
