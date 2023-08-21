@@ -210,11 +210,12 @@ class rhkdata:
 
 	def polyflatten(self, **kwargs):
 		"""Uses :func:`~rhkpy.rhkpy_process.polyflatten` to flatten the selected datafield in the :class:`rhkdata` instance.
-		All keyword accepted by :func:`~rhkpy.rhkpy_process.polyflatten` can be passed.
+		All keywords accepted by :func:`~rhkpy.rhkpy_process.polyflatten` can be passed.
 
-		:return: _description_
-		:rtype: _type_
+		:return: :class:`rhdata` instance, with the selected ``field_type`` flattened. Default ``field_type`` = 'topography'.
+		:rtype: :class:`rhdata` instance
 		"""	
+
 		# check if 'image' is present
 		if 'image' not in self.__dict__:
 			print('This `rhkdata` instance does not contain an image')
@@ -356,7 +357,7 @@ def _load_image(stmdata_object):
 
 	# make a polynomial background subtraction to the topography data (flatten)
 	if stmdata_object.loadraw is False:
-		stmdata_object.image = polyflatten(stmdata_object.image)
+		stmdata_object.image = polyflatten(stmdata_object.image, polyorder = 1)
 	return stmdata_object
 
 

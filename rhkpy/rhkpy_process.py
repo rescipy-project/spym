@@ -312,7 +312,7 @@ def polynomial_fit(order, x_data, y_data):
 
 	return coeff, covar
 
-def bgsubtract(x_data, y_data, polyorder = 3, toplot = False, fitmask = None, hmin = 0.5, hmax = 10000, wmin = 1.5, wmax = 20, prom = 2, exclusion_factor = 3, peak_pos = None):
+def bgsubtract(x_data, y_data, polyorder = 1, toplot = False, fitmask = None, hmin = 0.5, hmax = 10000, wmin = 1.5, wmax = 20, prom = 2, exclusion_factor = 3, peak_pos = None):
 	"""Takes the ``x_data`` and ``y_data`` and automatically finds peaks, using :py:mod:`scipy.find_peaks`.
 	These peaks are then used to define the areas of the background signal (``y_data``).
 	In the areas with the peaks removed, the background is fitted by a polynomial of order given by the optional argument: ``polyorder``.
@@ -575,7 +575,7 @@ def peakfit(xrobj, func = gaussian, fitresult = None, stval = None, bounds = Non
 	return fit
 
 
-def polyflatten(xrobj, field_type = 'topography', polyorder = 1, **kwargs):
+def polyflatten(xrobj, field_type = 'topography', **kwargs):
 	"""Fits a polynomial to the fast scan lines of topography data and 
 	
 	The keyword argument ``polyorder`` works the same way as in :func:`bgsubtract`.
@@ -587,8 +587,6 @@ def polyflatten(xrobj, field_type = 'topography', polyorder = 1, **kwargs):
 	:type xrobj: :py:mod:`xarray` Dataset, :class:`rhkdata.image`
 	:param field_type: select the DataArray: 'topography', 'current' or 'lia', defaults to 'topography'
 	:type field_type: str, optional
-	:param polyorder: Order of the polynomial used to fit the fast scan lines. The value used by :func:`bgsubtract`, defaults to 1
-	:type polyorder: int, optional
 	
 	:return: New :class:`rhkdata.image` Dataset of :class:`~rhkpy.rhkpy_loader.rhkdata`, with the DataArray specifiec by ``field_type`` flattened.
 	:rtype: :py:mod:`xarray` Dataset
