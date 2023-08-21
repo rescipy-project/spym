@@ -10,6 +10,12 @@ from spym.io import rhksm4
 from spym.process.level import align
 from spym.process.level import plane
 
+# for fancy plotting
+import hvplot.xarray
+import holoviews as hv
+import panel as pn
+import warnings
+
 from .rhkpy_process import *
 
 class rhkdata:
@@ -154,9 +160,6 @@ class rhkdata:
 		for item in self.spymdata:
 			print('\t', item)
 
-	def plot_specpos(self):		
-		# plot the positions of spectra on a topography image
-		return plot_specpos(self)
 
 	def coord_to_absolute(self):
 		"""Returns a new :class:`rhkdata` instance, with the coordinates updated to reflect the abolute tip position. This includes X, Y offset and rotation.
@@ -228,8 +231,124 @@ class rhkdata:
 		return flattened_rhkdataobj
 
 	
-	def qplot(self):
-		pass
+	def qplot(self, width = None, **kwargs):
+		# suppress warnings
+		warnings.filterwarnings('ignore', category = UserWarning, module = 'holoviews.plotting.bokeh.plot')
+		
+		# if the rhkdata instance is 'map'
+		if self.datatype == 'map':
+			if self.spectype == 'iv':
+				# take the mean of the spectra in a point and plot it
+				meanmap = self.spectra.mean(dim = ['repetitions', 'biasscandir'])
+				# select the lia
+				specplot = meanmap.lia.hvplot.image(
+					x = 'specpos_x',
+					y = 'specpos_y',
+					groupby = 'bias',
+					cmap = 'viridis'
+				)
+			elif self.spectype == 'iz':
+				# take the mean of the spectra in a point and plot it
+				meanmap = self.spectra.mean(dim = ['repetitions', 'zscandir'])
+				specplot = meanmap.current.hvplot.image(
+					x = 'specpos_x',
+					y = 'specpos_y',
+					groupby = 'z',
+					cmap = 'viridis'
+				)
+				# plot the topography
+				topoplot = self.image.topography[:, :, 0].hvplot.image(x = 'x', cmap = 'fire')
+
+				## adjust options
+				topoplot.opts(frame_width = width)
+				specplot.opts(frame_width = width)
+
+				# separate the plots and the widget into panels, so I can place the widget
+				topo_static = pn.panel(topoplot)
+				spec_dynamic = pn.panel(specplot)
+
+				# extract the widget
+				widget_panel = spec_dynamic[0]
+				specplot_static = spec_dynamic[1]
+
+				# combined plot
+				final_plot = pn.Row(topo_static, pn.Column(widget_panel, specplot_static))
+				## without using panel
+				# final_plot = hv.Layout([topoplot, specplot]).cols(2) # cols(2) to plot side by side
+				
+				# adjust size
+				# final_plot.height = height
+
+		elif self.datatype == 'line':
+			if self.spectype == 'iv':
+				# take the mean of the spectra in a point and plot it
+				meanmap = self.spectra.mean(dim = ['repetitions', 'biasscandir'])
+				# select the lia
+				specplot = meanmap.lia.hvplot.image(
+					x = 'bias',
+					y = 'dist',
+					cmap = 'viridis'
+				)
+
+				# also plot the positions of the spectra
+				# # for this we need to make a new dataarray, with the x and y coordinates
+				# ds = xr.DataArray(
+				# 	np.meshgrid(self.spectra.x.data, self.spectra.y.data)[0],
+				# 	coords = {'x': self.spectra.x.data, 'y': self.spectra.y.data},
+				# 	dims = ['x', 'y']
+				# )
+				# specposplot = ds.hvplot.scatter(aspect = 1, color = 'red', marker = 'dot')
+
+				# combined plot
+				final_plot = specplot
+
+			elif self.spectype == 'iz':
+				# take the mean of the spectra in a point and plot it
+				meanmap = self.spectra.mean(dim = ['repetitions', 'zscandir'])
+				# select the current
+				specplot = meanmap.current.hvplot.image(
+					x = 'z',
+					y = 'dist',
+					cmap = 'viridis'
+				)
+				final_plot = specplot
+
+		elif self.datatype == 'spec':
+			if self.spectype == 'iv':
+				meanspec = self.spectra.mean(dim = ['repetitions']).drop_vars(['x', 'y'])
+				specplot_left = meanspec.sel(biasscandir = 'left').lia.hvplot(
+					x = 'bias'
+					)
+				specplot_right = meanspec.sel(biasscandir = 'right').lia.hvplot(
+					x = 'bias'
+					)
+
+				# current
+				curr_left = meanspec.sel(biasscandir = 'left').current.hvplot(
+					x = 'bias'
+					)
+				curr_right = meanspec.sel(biasscandir = 'right').current.hvplot(
+					x = 'bias'
+					)
+				
+				leftpanel = (specplot_left*specplot_right).opts(width = 300, title = 'dI/dV')
+				rightpanel = (curr_left*curr_right).opts(width = 300, title = 'current')
+				final_plot = hv.Layout([leftpanel, rightpanel]).cols(2) # cols(2) to plot side by side
+			
+			elif self.spectype == 'iz':
+				meanspec = self.spectra.mean(dim = ['repetitions']).drop_vars(['x', 'y'])
+				specplot_left = meanspec.sel(zscandir = 'up').current.hvplot(
+					x = 'z'
+					)
+				specplot_right = meanspec.sel(zscandir = 'down').current.hvplot(
+					x = 'z'
+					)
+				
+				final_plot = (specplot_left*specplot_right).opts(width = 300, title = 'current')
+
+		## This shows the plot in a separate window
+		# hvplot.show(topoplot)
+		return final_plot
 
 
 ### internal functions -----------------------------------------------------------
