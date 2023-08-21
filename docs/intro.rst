@@ -31,5 +31,10 @@ Below is a simple example.
 	
 	import rhkpy
 
-	# Example to come soon
+	# Load an sm4 file
+	data = rhkpy.rhkdata('filename.sm4')
+
+	# "quick plot" of the data
+	data.qplot()
+
 
