@@ -22,6 +22,8 @@ class rhkdata:
 	:type repetitions: int, optional
 	:param alternate: `True` if the bias is swept forward and backward, `False` if not, defaults to True
 	:type alternate: bool, optional
+	:param loadraw: Set to `True` if you want the raw topography data, defaults to False
+	:type loadraw: bool, optional
 	
 	Some variables of the :class:`rhkdata` class:
 
@@ -33,7 +35,7 @@ class rhkdata:
 	All the variables can be listed by calling: :class:`rhkdata.print_info`.
 
 	.. note::
-		Optional parameters are not needed, they are just present for debugging purposes. Their values are inferred from the sm4 file.
+		If you want to skip the "flatten" filter of the topography images, use: `loadraw = True`.
 	
 	:Example:
 		
@@ -82,7 +84,7 @@ class rhkdata:
 			linespec_avg.plot()
 
 	"""
-	def __init__(self, filename, repetitions = 0, alternate = True, **kwargs):
+	def __init__(self, filename, repetitions = 0, alternate = True, loadraw = False, **kwargs):
 		"""Initialize the :class:`rhkdata` instance
 		"""		
 
@@ -90,6 +92,7 @@ class rhkdata:
 			print("alternate needs to be a bool variable: True or False. Default is True")
 
 		self.filename = filename
+		self.loadraw = loadraw
 		self.datatype = None
 		self.spectype = None
 
@@ -203,6 +206,25 @@ class rhkdata:
 		rhkdataobj_new.image = coord_to_absolute(self.image)
 
 		return rhkdataobj_new
+
+
+	def polyflatten(self, **kwargs):
+		"""Uses :func:`~rhkpy.rhkpy_process.polyflatten` to flatten the selected datafield in the :class:`rhkdata` instance.
+		All keyword accepted by :func:`~rhkpy.rhkpy_process.polyflatten` can be passed.
+
+		:return: _description_
+		:rtype: _type_
+		"""	
+		# check if 'image' is present
+		if 'image' not in self.__dict__:
+			print('This `rhkdata` instance does not contain an image')
+			return
+		# make a copy of the instance
+		flattened_rhkdataobj = copy.deepcopy(self)
+		# apply flatten to the copy
+		flattened_rhkdataobj.image = polyflatten(self.image, **kwargs)
+
+		return flattened_rhkdataobj
 
 
 ### internal functions -----------------------------------------------------------
@@ -331,6 +353,10 @@ def _load_image(stmdata_object):
 		stmdata_object = _xr_image_line(stmdata_object)
 	# add metadata
 	stmdata_object = _add_image_metadata(stmdata_object)
+
+	# make a polynomial background subtraction to the topography data (flatten)
+	if stmdata_object.loadraw is False:
+		stmdata_object.image = polyflatten(stmdata_object.image)
 	return stmdata_object
 
 
@@ -836,10 +862,10 @@ def _xr_image(stmdata_object):
 	
 	# Load image data
 	# use spym to align (flatten the data) and planefit
-	topofw, bg = align(topofw, baseline='median')
-	topobw, bg = align(topobw, baseline='median')
-	topofw, bg = plane(topofw)
-	topobw, bg = plane(topobw)
+	# topofw, bg = align(topofw, baseline='median')
+	# topobw, bg = align(topobw, baseline='median')
+	# topofw, bg = plane(topofw)
+	# topobw, bg = plane(topobw)
 
 	# current
 	currfw = stmdata_object.spymdata.Current_Forward

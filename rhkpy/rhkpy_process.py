@@ -1,27 +1,28 @@
 import matplotlib.pyplot as pl
 import numpy as np
 import xarray as xr
+import copy
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 from scipy import ndimage
 import hvplot.xarray
 
-def conf_hvplot_defaults():
-	"""Set up some default values for the plotting parameters, when using `hvplot`.
-	"""	
-	# Setting some default plot options for hvplot
-	from holoviews import opts
-	opts.defaults(
-		opts.Image(
-			aspect = 1
-			)
-		) # can't set default colormap with this
+# def conf_hvplot_defaults():
+# 	"""Set up some default values for the plotting parameters, when using `hvplot`.
+# 	"""	
+# 	# Setting some default plot options for hvplot
+# 	from holoviews import opts
+# 	opts.defaults(
+# 		opts.Image(
+# 			aspect = 1
+# 			)
+# 		) # can't set default colormap with this
 
 def coord_to_absolute(xrobj):
-	"""Takes as input the :class:`rhkdata.image` variable of an :class:`rhkdata` instance.
+	"""Takes as input the :class:`rhkdata.image` variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` instance.
 	Returns a new :py:mod:`xarray` instance, with the coordinates updated to reflect the abolute tip position. This includes X, Y offset and rotation.
 
-	:param xrobj: :py:mod:`xarray` image variable of an :class:`rhkdata` object
+	:param xrobj: :py:mod:`xarray` image variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` object
 	:type xrobj: :py:mod:`xarray` Dataset
 	
 	:return: :py:mod:`xarray` :class:`rhkdata.image` instance, with the same data and metadata as the input and the coordinates shifted to absolute tip positions.
@@ -208,6 +209,7 @@ def plot_specpos(stmdata_object):
 		)
 	
 ## peak finding and background subtraction
+
 
 def gaussian(x, x0 = 0, ampl = 2, width = 0.1, offset = 0):
 	"""Gaussian function. Width and amplitude parameters have the same meaning as for :func:`lorentz`.
@@ -573,4 +575,44 @@ def peakfit(xrobj, func = gaussian, fitresult = None, stval = None, bounds = Non
 	return fit
 
 
+def polyflatten(xrobj, field_type = 'topography', polyorder = 1, **kwargs):
+	"""Fits a polynomial to the fast scan lines of topography data and 
+	
+	The keyword argument ``polyorder`` works the same way as in :func:`bgsubtract`.
+	Keywords used by :func:`bgsubtract` can be passed.
+	
+	Still needs testing.
+
+	:param xrobj: :py:mod:`xarray` image variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` object
+	:type xrobj: :py:mod:`xarray` Dataset, :class:`rhkdata.image`
+	:param field_type: select the DataArray: 'topography', 'current' or 'lia', defaults to 'topography'
+	:type field_type: str, optional
+	:param polyorder: Order of the polynomial used to fit the fast scan lines. The value used by :func:`bgsubtract`, defaults to 1
+	:type polyorder: int, optional
+	
+	:return: New :class:`rhkdata.image` Dataset of :class:`~rhkpy.rhkpy_loader.rhkdata`, with the DataArray specifiec by ``field_type`` flattened.
+	:rtype: :py:mod:`xarray` Dataset
+	"""	
+
+	# check if the right object was passed
+	# the xrobj passed to the function should always be and image
+	if field_type not in xrobj.data_vars:
+		print('Wrong xarray type. The data needs to be an `image`')
+		return
+	
+	# make a copy of the xrobject
+	flatxrobj = copy.deepcopy(xrobj)
+
+	# iterate through the scan directions of the image
+	for scand in flatxrobj.scandir:
+		# select the scan direction
+		datafield = flatxrobj[field_type].sel(scandir = scand.data)
+		# iterate through the slow scan direction lines
+		for yy in datafield.y:
+			# fit the background
+			_, bg_values, _, _, _, _ = bgsubtract(datafield.sel(y = yy).x.data, datafield.sel(y = yy).data, exclusion_factor = 1, **kwargs)
+			# subtract the background
+			datafield.sel(y = yy).data -= bg_values
+
+	return flatxrobj
 
