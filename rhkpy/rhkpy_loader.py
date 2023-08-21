@@ -263,28 +263,28 @@ class rhkdata:
 					groupby = 'z',
 					cmap = 'viridis'
 				)
-				# plot the topography
-				topoplot = self.image.topography[:, :, 0].hvplot.image(x = 'x', cmap = 'fire')
+			# plot the topography
+			topoplot = self.image.topography[:, :, 0].hvplot.image(x = 'x', cmap = 'fire')
 
-				## adjust options
-				topoplot.opts(frame_width = width)
-				specplot.opts(frame_width = width)
+			## adjust options
+			topoplot.opts(frame_width = width)
+			specplot.opts(frame_width = width)
 
-				# separate the plots and the widget into panels, so I can place the widget
-				topo_static = pn.panel(topoplot)
-				spec_dynamic = pn.panel(specplot)
+			# separate the plots and the widget into panels, so I can place the widget
+			topo_static = pn.panel(topoplot)
+			spec_dynamic = pn.panel(specplot)
 
-				# extract the widget
-				widget_panel = spec_dynamic[0]
-				specplot_static = spec_dynamic[1]
+			# extract the widget
+			widget_panel = spec_dynamic[0]
+			specplot_static = spec_dynamic[1]
 
-				# combined plot
-				final_plot = pn.Row(topo_static, pn.Column(widget_panel, specplot_static))
-				## without using panel
-				# final_plot = hv.Layout([topoplot, specplot]).cols(2) # cols(2) to plot side by side
-				
-				# adjust size
-				# final_plot.height = height
+			# combined plot
+			final_plot = pn.Row(topo_static, pn.Column(widget_panel, specplot_static))
+			## without using panel
+			# final_plot = hv.Layout([topoplot, specplot]).cols(2) # cols(2) to plot side by side
+			
+			# adjust size
+			# final_plot.height = height
 
 		elif self.datatype == 'line':
 			if self.spectype == 'iv':
