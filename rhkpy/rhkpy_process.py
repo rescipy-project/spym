@@ -26,6 +26,35 @@ def coord_to_absolute(xrobj):
 	
 	:return: :py:mod:`xarray` :class:`rhkdata.image` instance, with the same data and metadata as the input and the coordinates shifted to absolute tip positions.
 	:rtype: :py:mod:`xarray` Dataset
+
+	:Example:
+		
+		.. code-block:: python
+
+			import rhkpy
+
+			m = rhkpy.rhkdata('didv map.sm4')
+
+			# Take the `rhkdata` instance (image or map): `m`,
+			# and convert the image coordinates to absolute values
+			m_abs_image = rhkpy.coord_to_absolute(m.image)
+
+			# coordinates of the instance `m`
+			# We can see it runs from 0 to 100 nm
+			print(m.image.x.min().data, m.image.x.max().data)
+			0.0 100.0
+
+			# check the same corrdinate for the new `m_abs`
+			print(m_abs_image.x.min().data, m_abs_image.x.max().data)
+			-877.0008892433623 -741.0633876547834
+
+			# we can see it's now shows the exact tip position
+			# the image is also rotated, as the "scan angle" attribute shows
+			m_abs_image.attrs['scan angle']
+			30.0
+			
+			# plot the rotated and offset image
+			m_abs_image.topography.sel(scandir = 'forward').plot()
 	"""	
 	# the xrobj passed to the function should always be and image
 	if 'topography' not in xrobj.data_vars:

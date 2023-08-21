@@ -42,7 +42,7 @@ class rhkdata:
 			import rhkpy
 
 			# Load dI/dV spectra, measured along a line
-			filename = 'line_9K_ABC6_2020_11_01_12_12_27_213.sm4'
+			filename = 'linespectra.sm4'
 			linespec = rhkpy.rhkdata(filename)
 
 			# display the contents of the spectroscopy `xarray` instance
@@ -167,7 +167,29 @@ class rhkdata:
 
 			import rhkpy
 
-			# example coming soon
+			m = rhkpy.rhkdata('didv map.sm4')
+
+			# Take the `rhkdata` instance (image or map): `m`,
+			# and convert the image coordinates to absolute values
+			m_abs = m.coord_to_absolute()
+
+			# coordinates of the instance `m`
+			# We can see it runs from 0 to 100 nm
+			print(m.image.x.min().data, m.image.x.max().data)
+			0.0 100.0
+
+			# check the same corrdinate for the new `m_abs`
+			print(m_abs.image.x.min().data, m_abs.image.x.max().data)
+			-877.0008892433623 -741.0633876547834
+
+			# we can see it's now shows the exact tip position
+			# the image is also rotated, as the "scan angle" attribute shows
+			m_abs.image.attrs['scan angle']
+			30.0
+			
+			# plot the rotated and offset image
+			m_abs.image.topography.sel(scandir = 'forward').plot()
+
 		"""
 		# check if 'image' is present
 		if 'image' not in self.__dict__:
