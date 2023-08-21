@@ -1,15 +1,14 @@
 import matplotlib.pyplot as pl
 import numpy as np
 import xarray as xr
-import hvplot
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 from scipy import ndimage
+import hvplot.xarray
 
 def conf_hvplot_defaults():
 	"""Set up some default values for the plotting parameters, when using `hvplot`.
 	"""	
-	hvplot.extension('bokeh')
 	# Setting some default plot options for hvplot
 	from holoviews import opts
 	opts.defaults(
@@ -31,6 +30,9 @@ def coord_to_absolute(xrobj):
 	# the xrobj passed to the function should always be and image
 	if 'topography' not in xrobj.data_vars:
 		print('Wrong xarray type. The data needs to be an `image`, not `spectra`')
+		return
+	if xrobj.attrs['datatype'] == 'line':
+		print('Sorry, linespectra are not supportet yet.')
 		return
 	
 	# get scan angle
@@ -103,8 +105,6 @@ def coord_to_absolute(xrobj):
 	newxlen = rotatedtopofw.shape[0] * pixelsizex
 	newylen = rotatedtopofw.shape[1] * pixelsizey
 
-	print('newlengths:', newxlen, newylen)
-
 	# new coordinate length
 	# placing the zero in the middle of the image
 	newxx = np.linspace(-newxlen/2, newxlen/2, num = rotatedtopofw.shape[0])
@@ -114,11 +114,12 @@ def coord_to_absolute(xrobj):
 	newpixelsizey = np.abs(newyy[1] - newyy[0])
 
 	# correction to the offet of the image
-	# need to include correction to rotation, and a rotated shift
+	# In the RHK Rev software, the offsets shown in the software refer to the bottom - left corner
+	# of the image. This does NOT include the rotation. For the proper shift of the image
+	# coordinates including rotation this has to be taken into account
 	diag = np.sqrt(xlen**2 + ylen**2)
 	offx = diag * np.sin(scangle/2) * np.cos(scangle/2 - np.pi/4) + diag * np.cos(np.pi/4 + scangle)/2 - pixelsizex
 	offy = diag * np.sin(scangle/2) * np.sin(scangle/2 - np.pi/4) + diag * np.sin(np.pi/4 + scangle)/2 - pixelsizey
-	print(offx, offy)
 
 	# make a new instance of the object, where we will change the coordinates
 	xrobj_abscoord = xr.Dataset(

@@ -11,7 +11,7 @@ setup(
         "pandas",
         "scipy",
         "xarray>=2023.7.0",
-        "hvplot"
+        "hvplot>=0.8.4"
     ],
     description = "A python package for processing Scanning Tunneling Microscopy (STM) data from RHK, based on the spym project.",
     long_description = open('README.md', 'r').read(),

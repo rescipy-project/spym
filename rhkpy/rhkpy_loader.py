@@ -2,13 +2,10 @@ import matplotlib.pyplot as pl
 import numpy as np
 import xarray as xr
 import re, copy
-
 # import load from spym
 from spym.io import load
-
 ## Using the old loader
 from spym.io import rhksm4
-
 ## flatten and plane fitting
 from spym.process.level import align
 from spym.process.level import plane
@@ -25,11 +22,7 @@ class rhkdata:
 	:type repetitions: int, optional
 	:param alternate: `True` if the bias is swept forward and backward, `False` if not, defaults to True
 	:type alternate: bool, optional
-	:param datatype: datatype, defaults to None
-	:type datatype: str, optional
-	:param spectype: spectrum type, defaults to None
-	:type spectype: str, optional
-
+	
 	Some variables of the :class:`rhkdata` class:
 
 	:var filename: (type str) filename of the "sm4" file
@@ -54,31 +47,35 @@ class rhkdata:
 
 			# display the contents of the spectroscopy `xarray` instance
 			linespec.spectra
-			xarray.Dataset
-			Dimensions:
-			bias: 501dist: 64repetitions: 1biasscandir: 2
-			Coordinates: (4)
+			<xarray.Dataset>
+			Dimensions:      (bias: 501, dist: 64, repetitions: 1, biasscandir: 2)
+			Coordinates:
+			* bias         (bias) float64 0.5 0.498 0.496 0.494 ... -0.496 -0.498 -0.5
+			* dist         (dist) float64 0.0 0.5279 1.056 1.584 ... 32.2 32.73 33.26
+			* repetitions  (repetitions) int32 0
+			* biasscandir  (biasscandir) <U5 'left' 'right'
 			Data variables:
-			lia
-			(bias, dist, repetitions, biasscandir)
-			float64
-			3.585 3.779 3.353 ... 5.278 5.185
-			current
-			(bias, dist, repetitions, biasscandir)
-			float64
-			99.49 111.2 94.62 ... -133.3 -132.7
-			x
-			(dist)
-			float64
-			-37.48 -36.97 ... -5.384 -4.866
-			y
-			(dist)
-			float64
-			-173.5 -173.6 ... -179.9 -180.0
-			Indexes: (4)
-			Attributes: (15)
+				lia          (bias, dist, repetitions, biasscandir) float64 3.585 ... 5.185
+				current      (bias, dist, repetitions, biasscandir) float64 99.49 ... -132.7
+				x            (dist) float64 -37.48 -36.97 -36.45 ... -5.902 -5.384 -4.866
+				y            (dist) float64 -173.5 -173.6 -173.7 ... -179.7 -179.9 -180.0
+			Attributes: (12/15)
+				filename:           line_9K_ABC6_2020_11_01_12_12_27_213.sm4
+				bias:               0.49999988
+				bias units:         V
+				setpoint:           99.99999439624929
+				setpoint units:     pA
+				measurement date:   11/01/20
+				...                 ...
+				LI amplitude unit:  mV
+				LI frequency:       1300.0
+				LI frequency unit:  Hz
+				LI phase:           -102.9999998
+				datatype:           line
+				spectype:           iv
 
-			# select the dI/dV signal (lia) and average the forward and backward bias sweeps and repetitions
+			# select the dI/dV signal (lia) and average the
+			# forward and backward bias sweeps and repetitions
 			linespec_avg = linespec.spectra.lia.mean(dim = ['biasscandir', 'repetitions'])
 
 			# plot the dI/dV values along the remaining coordinates: bias, dist
@@ -911,12 +908,12 @@ def _xr_image_line(stmdata_object):
 	# so that it shows up as the RHK Rev software would display it, when plotting with xarray.plot().
 	# this behaviour is because xarray.plot, uses by default pcolormesh() to plot.
 	# pcolormesh() flips the data along the slow scan direction. imshow() plots it the way it looks in RHK Rev and Gwyddion.
-	topofw = np.flipud(topofw)
-	topobw = np.flipud(topobw)
-	currfw = np.flipud(currfw)
-	currbw = np.flipud(currbw)
-	liafw = np.flipud(liafw)
-	liabw = np.flipud(liabw)
+	# topofw = np.flipud(topofw)
+	# topobw = np.flipud(topobw)
+	# currfw = np.flipud(currfw)
+	# currbw = np.flipud(currbw)
+	# liafw = np.flipud(liafw)
+	# liabw = np.flipud(liabw)
 
 	# coordinates
 	# absolute values should be found by adding the X Y offsets
@@ -938,13 +935,13 @@ def _xr_image_line(stmdata_object):
 	# create xarray Dataset of the image data
 	xrimage = xr.Dataset(
 		data_vars = dict(
-			topography = (['x', 'reps', 'scandir'], np.stack((topofw.data, topobw.data), axis=-1)*10**9),
-			current = (['x', 'reps', 'scandir'], np.stack((currfw.data, currbw.data), axis=-1)*10**12),
-			lia = (['x', 'reps', 'scandir'], np.stack((liafw.data, liabw.data), axis=-1)*10**12)
+			topography = (['y', 'x', 'scandir'], np.stack((topofw.data, topobw.data), axis=-1)*10**9),
+			current = (['y', 'x', 'scandir'], np.stack((currfw.data, currbw.data), axis=-1)*10**12),
+			lia = (['y', 'x', 'scandir'], np.stack((liafw.data, liabw.data), axis=-1)*10**12)
 			),
 		coords = dict(
-			x = xx*10**9,
-			reps = yy,
+			y = xx*10**9,
+			x = yy*10**9,
 			scandir = np.array(['forward', 'backward'])
 			),
 		attrs = dict(
@@ -961,12 +958,13 @@ def _xr_image_line(stmdata_object):
 	xrimage['lia'].attrs['units'] = 'pA'
 	xrimage['lia'].attrs['long units'] = 'picoampere'
 	xrimage['current'].attrs['units'] = 'pA'
-	xrimage['current'].attrs['long units'] = 'picoampere'
-	xrimage.coords['reps'].attrs['units'] = None
+	xrimage['current'].attrs['long units'] = 'picoampere'	
 	xrimage.coords['x'].attrs['units'] = 'nm'
 	xrimage.coords['x'].attrs['long units'] = 'nanometer'
-	xrimage.coords['reps'].attrs['note'] = 'repetitions of the topography line\n'
 	xrimage.coords['x'].attrs['note'] = 'fast scan direction\n'
+	xrimage.coords['y'].attrs['units'] = None
+	xrimage.coords['y'].attrs['note'] = 'repetitions of the topography line\n'
+	
 
 	stmdata_object.image = xrimage
 	return stmdata_object
