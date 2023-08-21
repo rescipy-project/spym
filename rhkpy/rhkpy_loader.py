@@ -232,6 +232,13 @@ class rhkdata:
 
 	
 	def qplot(self, width = None, **kwargs):
+		"""Quick plot of the :class:`rhkdata` instance
+
+		:param width: set size of plot, defaults to None
+		:type width: float, optional
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""		
 		# suppress warnings
 		warnings.filterwarnings('ignore', category = UserWarning, module = 'holoviews.plotting.bokeh.plot')
 		
