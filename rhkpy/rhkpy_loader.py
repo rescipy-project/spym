@@ -264,7 +264,8 @@ class rhkdata:
 					cmap = 'viridis'
 				)
 			# plot the topography
-			topoplot = self.image.topography[:, :, 0].hvplot.image(x = 'x', cmap = 'fire')
+			# The backward direction should be plotted, since this is the direction in which the tip moves, when the spectroscopy data is measured.
+			topoplot = self.image.topography[:, :, 1].hvplot.image(x = 'x', cmap = 'fire')
 
 			## adjust options
 			topoplot.opts(frame_width = width)
@@ -532,8 +533,10 @@ def _xr_map_iv(stmdata_object):
 	# If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
 	# The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
 	
-	liafw = np.flip(speccmap_fw, axis=1)
-	liabw = np.flip(speccmap_bw, axis=1)
+	# liafw = np.flip(speccmap_fw, axis = 2)
+	# liabw = np.flip(speccmap_bw, axis = 2)
+	liafw = speccmap_fw
+	liabw = speccmap_bw
 
 	# reshape Current data
 	temp = np.reshape(currentarray, (currentarray.shape[0], -1, numberofspectra), order='C')
@@ -549,8 +552,10 @@ def _xr_map_iv(stmdata_object):
 	# If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
 	# The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
 	
-	currentfw = np.flip(currentmap_fw, axis=1)
-	currentbw = np.flip(currentmap_bw, axis=1)	
+	# currentfw = np.flip(currentmap_fw, axis = 2)
+	# currentbw = np.flip(currentmap_bw, axis = 2)
+	currentfw = currentmap_fw
+	currentbw = currentmap_bw
 
 	# Coordinates of the spectroscopy map
 	
@@ -571,10 +576,10 @@ def _xr_map_iv(stmdata_object):
 	# also adding specific attributes
 	xrspec = xr.Dataset(
 		data_vars = dict(
-			lia = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], np.stack((liafw, liabw), axis=-1)*10**12),
-			current = (['bias', 'specpos_x', 'specpos_y', 'repetitions', 'biasscandir'], np.stack((currentfw, currentbw), axis=-1)*10**12),
-			x = (['specpos_x', 'specpos_y'], meshx*10**9),
-			y = (['specpos_x', 'specpos_y'], meshy*10**9)
+			lia = (['bias', 'specpos_y', 'specpos_x', 'repetitions', 'biasscandir'], np.stack((liafw, liabw), axis=-1)*10**12),
+			current = (['bias', 'specpos_y', 'specpos_x', 'repetitions', 'biasscandir'], np.stack((currentfw, currentbw), axis=-1)*10**12),
+			x = (['specpos_y', 'specpos_x'], meshx*10**9),
+			y = (['specpos_y', 'specpos_x'], meshy*10**9)
 			),
 		coords = dict(
 			bias = stmdata_object.spymdata.coords['LIA_Current_x'].data,
