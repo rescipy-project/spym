@@ -531,10 +531,7 @@ def _xr_map_iv(stmdata_object):
 	
 	# The last axis (in this case with length of 1) contains the repeated scans in one particular pixel.
 	# If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
-	# The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
-	
-	# liafw = np.flip(speccmap_fw, axis = 2)
-	# liabw = np.flip(speccmap_bw, axis = 2)
+
 	liafw = speccmap_fw
 	liabw = speccmap_bw
 
@@ -550,10 +547,7 @@ def _xr_map_iv(stmdata_object):
 	
 	# The last axis (in this case with length of 1) contains the repeated scans in one particular pixel.
 	# If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
-	# The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
-	
-	# currentfw = np.flip(currentmap_fw, axis = 2)
-	# currentbw = np.flip(currentmap_bw, axis = 2)
+
 	currentfw = currentmap_fw
 	currentbw = currentmap_bw
 
@@ -796,10 +790,9 @@ def _xr_map_iz(stmdata_object):
 	"""
 	The last axis (in this case with length of 1) contains the repeated scans in one particular pixel.
 	If the `repetitions` variable is set to greater than 1, this will contains the repeated spectra within an `X, Y` pixel.
-	The array needs to be flipped along axis = 1 (the "x" axis in the topography image) to fit with the data read by the ASCII method
 	"""
-	currentfw = np.flip(currentmap_fw, axis=1)
-	currentbw = np.flip(currentmap_bw, axis=1)	
+	currentfw = currentmap_fw
+	currentbw = currentmap_bw
 
 	"""
 	Coordinates of the spectroscopy map
