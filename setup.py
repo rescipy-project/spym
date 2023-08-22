@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name = "rhkpy",
-    version = "1.0.2",
+    version = "1.1.0",
     packages = find_packages(),
     # python_requires = '>=3.10',
     install_requires = [
@@ -11,7 +11,9 @@ setup(
         "pandas",
         "scipy",
         "xarray>=2023.7.0",
+        "holoviews>=1.17.0",
         "hvplot>=0.8.4",
+        "bokeh>=3.2.2",
         "panel>=1.2.1"
     ],
     description = "A python package for processing Scanning Tunneling Microscopy (STM) data from RHK, based on the spym project.",
