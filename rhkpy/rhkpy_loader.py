@@ -14,7 +14,6 @@ from spym.process.level import plane
 import hvplot.xarray
 import holoviews as hv
 import panel as pn
-import warnings
 
 from .rhkpy_process import *
 
@@ -238,9 +237,7 @@ class rhkdata:
 		:type width: float, optional
 		:return: :py:mod:`holoviews` plot
 		:rtype: :py:mod:`holoviews`
-		"""		
-		# suppress warnings
-		warnings.filterwarnings('ignore', category = UserWarning, module = 'holoviews.plotting.bokeh.plot')
+		"""	
 		
 		# if the rhkdata instance is 'map'
 		if self.datatype == 'map':
@@ -283,7 +280,6 @@ class rhkdata:
 			final_plot = pn.Row(topo_static, pn.Column(widget_panel, specplot_static))
 			## without using panel
 			# final_plot = hv.Layout([topoplot, specplot]).cols(2) # cols(2) to plot side by side
-			
 			# adjust size
 			# final_plot.height = height
 
@@ -416,7 +412,9 @@ class rhkdata:
 				
 				leftpanel = (liaplot_fw*liaplot_bw).opts(width = 400, title = 'dI/dV')
 				rightpanel = (currplot_fw*currplot_bw).opts(width = 400, title = 'current')
-				final_plot = hv.Layout([leftpanel, rightpanel]).cols(2) # cols(2) to plot side by side
+				left_panel = pn.panel(leftpanel)
+				right_panel = pn.panel(rightpanel)
+				final_plot = pn.Row(left_panel, right_panel)
 			
 			elif self.spectype == 'iz':
 				if len(self.spectra.repetitions) == 1:
@@ -432,7 +430,7 @@ class rhkdata:
 					specplot_up *= self.spectra.current.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'z', color = 'red', line_width = 2, label = 'avg up')
 					specplot_down *= self.spectra.current.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'z', color = 'blue', line_width = 2, label = 'avg down')
 				
-				final_plot = (specplot_up*specplot_down).opts(width = 400, title = 'current')
+				final_plot = pn.panel((specplot_up*specplot_down).opts(width = 400, title = 'current'))
 
 		## This shows the plot in a separate window
 		# hvplot.show(topoplot)

@@ -543,7 +543,7 @@ def peakfit(xrobj, func = gaussian, fitresult = None, stval = None, bounds = Non
 
 
 def polyflatten(xrobj, field_type = 'topography', **kwargs):
-	"""Fits a polynomial to the fast scan lines of topography data and 
+	"""Fits a polynomial to the fast scan lines of topography data and subtracts it from the lines.
 	
 	The keyword argument ``polyorder`` works the same way as in :func:`bgsubtract`.
 	Keywords used by :func:`bgsubtract` can be passed.

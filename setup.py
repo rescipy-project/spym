@@ -14,7 +14,8 @@ setup(
         "holoviews>=1.17.0",
         "hvplot>=0.8.4",
         "bokeh>=3.2.2",
-        "panel>=1.2.1"
+        "panel>=1.2.1",
+        "selenium"
     ],
     description = "A python package for processing Scanning Tunneling Microscopy (STM) data from RHK, based on the spym project.",
     long_description = open('README.md', 'r').read(),
