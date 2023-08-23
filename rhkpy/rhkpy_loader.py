@@ -335,15 +335,6 @@ class rhkdata:
 				plot_panel = combined_panel[0]
 				plot_widget = combined_panel[1]
 
-				# also plot the positions of the spectra
-				# # for this we need to make a new dataarray, with the x and y coordinates
-				# ds = xr.DataArray(
-				# 	np.meshgrid(self.spectra.x.data, self.spectra.y.data)[0],
-				# 	coords = {'x': self.spectra.x.data, 'y': self.spectra.y.data},
-				# 	dims = ['x', 'y']
-				# )
-				# specposplot = ds.hvplot.scatter(aspect = 1, color = 'red', marker = 'dot')
-
 				# combined plot
 				final_plot = pn.Row(twod_plot_panel, pn.Column(plot_widget, plot_panel))
 

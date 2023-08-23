@@ -7,6 +7,11 @@ from scipy.optimize import curve_fit
 from scipy import ndimage
 import hvplot.xarray
 
+## internal functions
+
+
+## functions ------------------------------------------------------
+
 def coord_to_absolute(xrobj):
 	"""Takes as input the :class:`rhkdata.image` variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` instance.
 	Returns a new :py:mod:`xarray` instance, with the coordinates updated to reflect the abolute tip position. This includes X, Y offset and rotation.
@@ -614,7 +619,6 @@ def genthumbs(folderpath = '', **kwargs):
 	sm4list = glob.glob(folderpath + '*.sm4')
 	filenames = []
 	for sm4path in sm4list:
-		print(sm4path)
 		filenames += [_get_filename(sm4path)]
 	
 	# generate thumbs

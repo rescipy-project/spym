@@ -43,4 +43,7 @@ Below is a simple example.
 	# "quick plot" of the data
 	data.qplot()
 
+	# make thumbnails of the sm4 files in the current working directory
+	rhkpy.genthumbs()
+
 
