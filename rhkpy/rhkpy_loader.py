@@ -256,7 +256,8 @@ class rhkdata:
 					x = 'specpos_x',
 					y = 'specpos_y',
 					groupby = 'bias',
-					cmap = 'viridis'
+					cmap = 'viridis',
+					title = 'dI/dV map'
 				)
 			elif self.spectype == 'iz':
 				# take the mean of the spectra in a point and plot it
@@ -265,11 +266,12 @@ class rhkdata:
 					x = 'specpos_x',
 					y = 'specpos_y',
 					groupby = 'z',
-					cmap = 'viridis'
+					cmap = 'viridis',
+					title = 'I(z) map'
 				)
 			# plot the topography
 			# The backward direction should be plotted, since this is the direction in which the tip moves, when the spectroscopy data is measured.
-			topoplot = self.image.topography[:, :, 1].hvplot.image(x = 'x', cmap = 'fire')
+			topoplot = self.image.topography[:, :, 1].hvplot.image(x = 'x', cmap = 'fire', title = 'topography backward')
 
 			## adjust options
 			topoplot.opts(frame_width = width)
@@ -298,7 +300,8 @@ class rhkdata:
 				specplot = meanmap.lia.hvplot.image(
 					x = 'bias',
 					y = 'dist',
-					cmap = 'viridis'
+					cmap = 'viridis',
+					title = 'dI/dV line spectra'
 				)
 
 				# plot a selected spectrum along the dist dimensions
@@ -351,7 +354,8 @@ class rhkdata:
 				specplot = meanmap.current.hvplot.image(
 					x = 'z',
 					y = 'dist',
-					cmap = 'viridis'
+					cmap = 'viridis',
+					title = 'I(z) line spectra'
 				)
 
 				# plot a selected spectrum along the dist dimensions

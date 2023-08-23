@@ -1,12 +1,11 @@
 import matplotlib.pyplot as pl
 import numpy as np
 import xarray as xr
-import copy, glob
+import copy, glob, re
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 from scipy import ndimage
 import hvplot.xarray
-
 
 def coord_to_absolute(xrobj):
 	"""Takes as input the :class:`rhkdata.image` variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` instance.
@@ -573,8 +572,65 @@ def polyflatten(xrobj, field_type = 'topography', **kwargs):
 
 ## plotting and data visualization -------------------------------------------
 
-def genthumbs(folderpath):
-	pass
+def genthumbs(folderpath = '', **kwargs):
+	"""Generate thumbnails for the sm4 files present in the current folder (usually the folder where the jupyter notebook is present).
+	It ``folderpath`` is specified it generates the thumbnails in the path given.
+	All other files are ignored. Subfolders are ignored.
+	The method uses :func:`~rhkpy.rhkpy_loader.rhkdata.qplot` to make the png images.
 
-def navigation():
-	pass
+	:param folderpath: path to the folder containing the sm4 files, defaults to ''
+	:type folderpath: str, optional
+
+	:Example:
+		
+		.. code-block:: python
+
+			import rhkpy
+
+			# generate thumbnails of the sm4 files in the current working directory
+			rhkpy.genthumbs()
+
+			# generate thumbnails for the folder "stm measurements/maps"
+			rhkpy.genthumbs(folderpath = './stm measurements/maps/')
+
+	.. note::
+
+		Remember. Possible options for ``folderpath`` are:
+		
+		- relative path: "./" means the current directory. "../" is one directory above the current one.
+		- absolute path: Can start with: "c:/users/averagejoe/data"
+
+		If you use backslashes to separate folder names, remember to append "r" to the beginning of the path to escape backslashes. For example: ``folderpath = r"c:\\users\\averagejoe\\data"``.
+		Paths can be copied directly from Windows explorer, if you append an "r".
+	"""	
+	# import some dependencies
+	from .rhkpy_loader import _get_filename, rhkdata
+
+	# make sure folderpath is correct, add a trailing \\ if none is present
+	if not re.search(r'\\$', folderpath):
+		folderpath += '\\'
+
+	# get the sm4 filenames in the folder
+	sm4list = glob.glob(folderpath + '*.sm4')
+	filenames = []
+	for sm4path in sm4list:
+		print(sm4path)
+		filenames += [_get_filename(sm4path)]
+	
+	# generate thumbs
+	for fname in filenames:
+		# load file
+		try:
+			data = rhkdata(folderpath + fname)
+		except Exception as e:
+			# handle the exception
+			print('A load error occured in file:', fname, '\n\tThe error is:', e)
+			continue
+		
+		# plot the thumbnail
+		data_plot = data.qplot()
+		data_plot.save(folderpath + fname[:-4] + '.png')
+
+def navigation(*args):
+	for a in args:
+		print(a)
