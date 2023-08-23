@@ -106,6 +106,8 @@ class rhkdata:
 
 		# Load the data using spym
 		self.spymdata = load_spym(self.filename)
+		if self.spymdata is None:
+			return
 
 		# check software version. Not tested for MinorVer < 6
 		l = list(self.spymdata.keys())
@@ -238,9 +240,14 @@ class rhkdata:
 		:return: :py:mod:`holoviews` plot
 		:rtype: :py:mod:`holoviews`
 		"""	
-		
+		if self.datatype == 'image':
+			topo_plot = self.image.topography[:, :, 1].hvplot.image(cmap = 'fire', x = 'x', y = 'y', title = 'topography backward')
+			lia_plot = self.image.lia[:, :, 1].hvplot.image(cmap = 'plasma', x = 'x', y = 'y', title = 'dI/dV backward')
+
+			final_plot = pn.Row(pn.panel(topo_plot), pn.panel(lia_plot))
+
 		# if the rhkdata instance is 'map'
-		if self.datatype == 'map':
+		elif self.datatype == 'map':
 			if self.spectype == 'iv':
 				# take the mean of the spectra in a point and plot it
 				meanmap = self.spectra.mean(dim = ['repetitions', 'biasscandir'])

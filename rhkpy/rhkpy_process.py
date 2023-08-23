@@ -1,22 +1,12 @@
 import matplotlib.pyplot as pl
 import numpy as np
 import xarray as xr
-import copy
+import copy, glob
 from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 from scipy import ndimage
 import hvplot.xarray
 
-# def conf_hvplot_defaults():
-# 	"""Set up some default values for the plotting parameters, when using `hvplot`.
-# 	"""	
-# 	# Setting some default plot options for hvplot
-# 	from holoviews import opts
-# 	opts.defaults(
-# 		opts.Image(
-# 			aspect = 1
-# 			)
-# 		) # can't set default colormap with this
 
 def coord_to_absolute(xrobj):
 	"""Takes as input the :class:`rhkdata.image` variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` instance.
@@ -582,6 +572,9 @@ def polyflatten(xrobj, field_type = 'topography', **kwargs):
 	return flatxrobj
 
 ## plotting and data visualization -------------------------------------------
+
+def genthumbs(folderpath):
+	pass
 
 def navigation():
 	pass
