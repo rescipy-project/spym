@@ -298,6 +298,37 @@ class rhkdata:
 					cmap = 'viridis'
 				)
 
+				# plot a selected spectrum along the dist dimensions
+				# plot repetitions and biasscandir on the same plot
+				# do the first plot, if there are more than 1 repetitions, plot the average first
+				if len(self.spectra.repetitions) == 1:
+					lineplot_fw = self.spectra.lia[:, :, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
+					lineplot_bw = self.spectra.lia[:, :, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
+				elif len(self.spectra.repetitions) > 1:
+					lineplot_fw = self.spectra.lia[:, :, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					lineplot_bw = self.spectra.lia[:, :, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					for i in range(1, len(self.spectra.repetitions)):
+						# iterate through the repetitions and plot on the same plot
+						lineplot_fw *= self.spectra.lia[:, :, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+						lineplot_bw *= self.spectra.lia[:, :, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					lineplot_fw *= self.spectra.lia.mean(dim = 'repetitions')[:, :, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
+					lineplot_bw *= self.spectra.lia.mean(dim = 'repetitions')[:, :, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
+
+				# combine the fw and bw bias sweeps
+				combined = lineplot_fw * lineplot_bw
+				
+				# if width parameter is specified, set the size of the plots
+				if width is None:
+					twod_plot_panel = pn.panel(specplot)
+					combined_panel = pn.panel(combined)
+				else:
+					twod_plot_panel = pn.panel(specplot.opts(frame_width = int(0.8*width)))
+					combined_panel = pn.panel(combined.opts(frame_width = width))
+				
+				# separate the widget and plot into panels
+				plot_panel = combined_panel[0]
+				plot_widget = combined_panel[1]
+
 				# also plot the positions of the spectra
 				# # for this we need to make a new dataarray, with the x and y coordinates
 				# ds = xr.DataArray(
@@ -308,7 +339,7 @@ class rhkdata:
 				# specposplot = ds.hvplot.scatter(aspect = 1, color = 'red', marker = 'dot')
 
 				# combined plot
-				final_plot = specplot
+				final_plot = pn.Row(twod_plot_panel, pn.Column(plot_widget, plot_panel))
 
 			elif self.spectype == 'iz':
 				# take the mean of the spectra in a point and plot it
@@ -319,40 +350,89 @@ class rhkdata:
 					y = 'dist',
 					cmap = 'viridis'
 				)
-				final_plot = specplot
+
+				# plot a selected spectrum along the dist dimensions
+				# plot repetitions and zscandir on the same plot
+				# if there are more repetitions, the first plot will be the average
+				if len(self.spectra.repetitions) == 1:
+					lineplot_fw = self.spectra.current[:, :, 0, 0].hvplot.line(x = 'z', color = 'red', label = 'up')
+					lineplot_bw = self.spectra.current[:, :, 0, 1].hvplot.line(x = 'z', color = 'blue', label = 'down')
+				elif len(self.spectra.repetitions) > 1:
+					lineplot_fw = self.spectra.current[:, :, 0, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					lineplot_bw = self.spectra.current[:, :, 0, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					for i in range(1, len(self.spectra.repetitions)):
+						# iterate through the repetitions and plot on the same plot
+						lineplot_fw *= self.spectra.current[:, :, i, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+						lineplot_bw *= self.spectra.current[:, :, i, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					lineplot_fw *= self.spectra.current.mean(dim = 'repetitions')[:, :, 0].hvplot.line(x = 'z', color = 'red', line_width = 2, label = 'avg up')
+					lineplot_bw *= self.spectra.current.mean(dim = 'repetitions')[:, :, 1].hvplot.line(x = 'z', color = 'blue', line_width = 2, label = 'avg down')
+
+				# combine the fw and bw z sweeps
+				combined = lineplot_fw * lineplot_bw
+				
+				# if width parameter is specified, set the size of the plots
+				if width is None:
+					twod_plot_panel = pn.panel(specplot)
+					combined_panel = pn.panel(combined)
+				else:
+					twod_plot_panel = pn.panel(specplot.opts(frame_width = int(0.8*width)))
+					combined_panel = pn.panel(combined.opts(frame_width = width))
+				
+				# separate the widget and plot into panels
+				plot_panel = combined_panel[0]
+				plot_widget = combined_panel[1]
+
+				# combined plot
+				final_plot = pn.Row(twod_plot_panel, pn.Column(plot_widget, plot_panel))
 
 		elif self.datatype == 'spec':
 			if self.spectype == 'iv':
-				meanspec = self.spectra.mean(dim = ['repetitions']).drop_vars(['x', 'y'])
-				specplot_left = meanspec.sel(biasscandir = 'left').lia.hvplot(
-					x = 'bias'
-					)
-				specplot_right = meanspec.sel(biasscandir = 'right').lia.hvplot(
-					x = 'bias'
-					)
+				if len(self.spectra.repetitions) == 1:
+					liaplot_fw = self.spectra.lia[:, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
+					liaplot_bw = self.spectra.lia[:, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
+				elif len(self.spectra.repetitions) > 1:
+					liaplot_fw = self.spectra.lia[:, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					liaplot_bw = self.spectra.lia[:, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					for i in range(1, len(self.spectra.repetitions)):
+						# iterate through the repetitions and plot on the same plot
+						liaplot_fw *= self.spectra.lia[:, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+						liaplot_bw *= self.spectra.lia[:, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					liaplot_fw *= self.spectra.lia.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
+					liaplot_bw *= self.spectra.lia.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
 
 				# current
-				curr_left = meanspec.sel(biasscandir = 'left').current.hvplot(
-					x = 'bias'
-					)
-				curr_right = meanspec.sel(biasscandir = 'right').current.hvplot(
-					x = 'bias'
-					)
+				if len(self.spectra.repetitions) == 1:
+					currplot_fw = self.spectra.current[:, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
+					currplot_bw = self.spectra.current[:, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
+				elif len(self.spectra.repetitions) > 1:
+					currplot_fw = self.spectra.current[:, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					currplot_bw = self.spectra.current[:, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					for i in range(1, len(self.spectra.repetitions)):
+						# iterate through the repetitions and plot on the same plot
+						currplot_fw *= self.spectra.current[:, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+						currplot_bw *= self.spectra.current[:, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					currplot_fw *= self.spectra.current.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
+					currplot_bw *= self.spectra.current.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
 				
-				leftpanel = (specplot_left*specplot_right).opts(width = 300, title = 'dI/dV')
-				rightpanel = (curr_left*curr_right).opts(width = 300, title = 'current')
+				leftpanel = (liaplot_fw*liaplot_bw).opts(width = 400, title = 'dI/dV')
+				rightpanel = (currplot_fw*currplot_bw).opts(width = 400, title = 'current')
 				final_plot = hv.Layout([leftpanel, rightpanel]).cols(2) # cols(2) to plot side by side
 			
 			elif self.spectype == 'iz':
-				meanspec = self.spectra.mean(dim = ['repetitions']).drop_vars(['x', 'y'])
-				specplot_left = meanspec.sel(zscandir = 'up').current.hvplot(
-					x = 'z'
-					)
-				specplot_right = meanspec.sel(zscandir = 'down').current.hvplot(
-					x = 'z'
-					)
+				if len(self.spectra.repetitions) == 1:
+					specplot_up = self.spectra.current[:, 0, 0].hvplot.line(x = 'z', color = 'red', label = 'up')
+					specplot_down = self.spectra.current[:, 0, 1].hvplot.line(x = 'z', color = 'blue', label = 'down')
+				elif len(self.spectra.repetitions) > 1:
+					specplot_up = self.spectra.current[:, 0, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					specplot_down = self.spectra.current[:, 0, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					for i in range(1, len(self.spectra.repetitions)):
+						# iterate through the repetitions and plot on the same plot
+						specplot_up *= self.spectra.current[:, i, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+						specplot_down *= self.spectra.current[:, i, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+					specplot_up *= self.spectra.current.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'z', color = 'red', line_width = 2, label = 'avg up')
+					specplot_down *= self.spectra.current.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'z', color = 'blue', line_width = 2, label = 'avg down')
 				
-				final_plot = (specplot_left*specplot_right).opts(width = 300, title = 'current')
+				final_plot = (specplot_up*specplot_down).opts(width = 400, title = 'current')
 
 		## This shows the plot in a separate window
 		# hvplot.show(topoplot)
