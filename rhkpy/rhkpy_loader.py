@@ -250,19 +250,18 @@ class rhkdata:
 		:rtype: :py:mod:`panel`
 		"""			
 		if self.datatype == 'image':
-			topo_plot = self.qplot_topo(**kwargs)
-			lia_plot = self.qplot_lia(**kwargs)
+			topo_plot = self._qplot_topo(**kwargs)
+			lia_plot = self._qplot_lia(**kwargs)
 			final_plot = pn.Row(pn.panel(topo_plot), pn.panel(lia_plot))
 		elif self.datatype == 'map':
 			# if the rhkdata instance is 'map'
 			if self.spectype == 'iv':
-				specplot = self.qplot_map_iv(**kwargs)
+				specplot = self._qplot_map_iv(**kwargs)
 			elif self.spectype == 'iz':
-				specplot = self.qplot_map_iz(**kwargs)
+				specplot = self._qplot_map_iz(**kwargs)
 			# plot the topography
-			topoplot = qplot_topo(self)
-
-			## adjust options
+			topoplot = self._qplot_topo(**kwargs)
+			# adjust options
 			topoplot.opts(frame_width = width)
 			specplot.opts(frame_width = width)
 			# separate the plots and the widget into panels, so I can place the widget
@@ -275,10 +274,9 @@ class rhkdata:
 			final_plot = pn.Row(topo_static, pn.Column(widget_panel, specplot_static))
 		elif self.datatype == 'line':
 			if self.spectype == 'iv':
-				specplot = self.qplot_line_iv(**kwargs)
+				specplot = self._qplot_line_iv(**kwargs)
 				# plot a selected spectrum along the dist dimensions
-				combined = self.qplot_line_spec_iv(**kwargs)
-
+				combined = self._qplot_line_spec_iv(**kwargs)
 				# if width parameter is specified, set the size of the plots
 				if width is None:
 					twod_plot_panel = pn.panel(specplot)
@@ -293,9 +291,8 @@ class rhkdata:
 				final_plot = pn.Row(twod_plot_panel, pn.Column(plot_widget, plot_panel))
 			elif self.spectype == 'iz':
 				# take the mean of the spectra in a point and plot it
-				specplot = self.qplot_line_iz(**kwargs)
-				combined = self.qplot_line_spec_iz(**kwargs)
-				
+				specplot = self._qplot_line_iz(**kwargs)
+				combined = self._qplot_line_spec_iz(**kwargs)
 				# if width parameter is specified, set the size of the plots
 				if width is None:
 					twod_plot_panel = pn.panel(specplot)
@@ -303,35 +300,42 @@ class rhkdata:
 				else:
 					twod_plot_panel = pn.panel(specplot.opts(frame_width = int(0.8*width)))
 					combined_panel = pn.panel(combined.opts(frame_width = width))
-				
 				# separate the widget and plot into panels
 				plot_panel = combined_panel[0]
 				plot_widget = combined_panel[1]
-
 				# combined plot
 				final_plot = pn.Row(twod_plot_panel, pn.Column(plot_widget, plot_panel))
 
 		elif self.datatype == 'spec':
 			if self.spectype == 'iv':
-				leftpanel = self.qplot_spec_iv_lia(**kwargs)
-				rightpanel = self.qplot_spec_iv_curr(**kwargs)
-
+				leftpanel = self._qplot_spec_iv_lia(**kwargs)
+				rightpanel = self._qplot_spec_iv_curr(**kwargs)
 				left_panel = pn.panel(leftpanel)
 				right_panel = pn.panel(rightpanel)
 				final_plot = pn.Row(left_panel, right_panel)
-			
 			elif self.spectype == 'iz':
-				combined = self.qplot_spec_iz(**kwargs)
-				
+				combined = self._qplot_spec_iz(**kwargs)
 				final_plot = pn.panel(combined.opts(width = 400, title = 'current'))
 
 		## This shows the plot in a separate window
 		# hvplot.show(topoplot)
 		return final_plot
 
+
+def load_rhksm4(filename):
+	"""Load the data from the .sm4 file using the old loader from spym"""
+	return rhksm4.load(filename)
+
+
+def load_spym(filename):
+	"""Load the data from the .sm4 file using spym"""
+	return load(filename)
+
+
+## internal functions -----------------------------------------------------------------------------------------
 ## plotting functions for qplot
 
-	def qplot_topo(self, cmap_topo = 'fire', **kwargs):
+	def _qplot_topo(self, cmap_topo = 'fire', **kwargs):
 		"""Plotting topography data using :py:mod:`hvplot`.
 
 		:param cmap_topo: colorscale used for topography data, defaults to 'fire'
@@ -343,7 +347,7 @@ class rhkdata:
 		# The backward direction should be plotted, since this is the direction in which the tip moves, when the spectroscopy data is measured.
 		return self.image.topography[:, :, 1].hvplot.image(x = 'x', cmap = cmap_topo, title = 'topography backward')
 
-	def qplot_lia(self, cmap_spec = 'viridis', **kwargs):
+	def _qplot_lia(self, cmap_spec = 'viridis', **kwargs):
 		"""Plotting dI/dV image data using :py:mod:`hvplot`.
 
 		:param cmap_spec: colorscale used for dI/dV data, defaults to 'viridis'
@@ -354,7 +358,7 @@ class rhkdata:
 		"""	
 		return self.image.lia[:, :, 1].hvplot.image(cmap = cmap_spec, x = 'x', y = 'y', title = 'dI/dV backward')
 
-	def qplot_map_iv(self, cmap_spec = 'viridis', **kwargs):
+	def _qplot_map_iv(self, cmap_spec = 'viridis', **kwargs):
 		"""Plotting dI/dV map data using :py:mod:`hvplot`.
 		The mean values (biasscandir and repetitions) of the dI/dV signal are plotted on the density plot.
 
@@ -377,7 +381,7 @@ class rhkdata:
 		# holoviews plot
 		return specplot
 	
-	def qplot_map_iz(self, cmap_spec = 'viridis', **kwargs):
+	def _qplot_map_iz(self, cmap_spec = 'viridis', **kwargs):
 		"""Plotting I(z) map data using :py:mod:`hvplot`.
 
 		:param cmap_spec: colorscale used for I(z) data, defaults to 'viridis'
@@ -397,7 +401,7 @@ class rhkdata:
 		)
 		return specplot
 
-	def qplot_line_iv(self, cmap_spec = 'viridis', **kwargs):
+	def _qplot_line_iv(self, cmap_spec = 'viridis', **kwargs):
 		"""Plotting dI/dV line data on a density plot (bias vs distance), using :py:mod:`hvplot`.
 		The mean values of the dI/dV signal are plotted on the density plot.
 
@@ -419,7 +423,7 @@ class rhkdata:
 		)
 		return specplot
 
-	def qplot_line_spec_iv(self, **kwargs):
+	def _qplot_line_spec_iv(self, **kwargs):
 		"""Plotting dI/dV spectra of a line spectroscopy instance, using :py:mod:`hvplot`.
 
 		:return: :py:mod:`holoviews` plot
@@ -443,7 +447,7 @@ class rhkdata:
 		# combine the fw and bw bias sweeps
 		return lineplot_fw * lineplot_bw
 
-	def qplot_line_iz(self, cmap_spec = 'viridis', **kwargs):
+	def _qplot_line_iz(self, cmap_spec = 'viridis', **kwargs):
 		"""Plotting I(z) line data on a density plot (tip height vs distance), using :py:mod:`hvplot`.
 		The mean values of the I(z) signal are plotted.
 
@@ -464,7 +468,7 @@ class rhkdata:
 		)
 		return specplot
 
-	def qplot_line_spec_iz(self, **kwargs):
+	def _qplot_line_spec_iz(self, **kwargs):
 		"""Plotting I(z) spectra of a line spectroscopy instance, using :py:mod:`hvplot`.
 
 		:return: :py:mod:`holoviews` plot
@@ -488,7 +492,7 @@ class rhkdata:
 		# combine the fw and bw z sweeps
 		return lineplot_fw * lineplot_bw
 
-	def qplot_spec_iv_lia(self, **kwargs):
+	def _qplot_spec_iv_lia(self, **kwargs):
 		"""Plotting the dI/dV signal of a single spectrum instance, using :py:mod:`hvplot`.
 
 		:return: :py:mod:`holoviews` plot
@@ -508,7 +512,7 @@ class rhkdata:
 			liaplot_bw *= self.spectra.lia.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
 		return (liaplot_fw*liaplot_bw).opts(width = 400, title = 'dI/dV')
 
-	def qplot_spec_iv_curr(self, **kwargs):
+	def _qplot_spec_iv_curr(self, **kwargs):
 		"""Plotting the current signal of a single spectrum instance, using :py:mod:`hvplot`.
 
 		:return: :py:mod:`holoviews` plot
@@ -528,7 +532,7 @@ class rhkdata:
 			currplot_bw *= self.spectra.current.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
 		return (currplot_fw*currplot_bw).opts(width = 400, title = 'current')
 
-	def qplot_spec_iz(self, **kwargs):
+	def _qplot_spec_iz(self, **kwargs):
 		"""Plotting an I(z) single spectrum instance, using :py:mod:`hvplot`.
 
 		:return: :py:mod:`holoviews` plot
@@ -549,7 +553,7 @@ class rhkdata:
 		return specplot_up*specplot_down
 
 
-### internal functions -----------------------------------------------------------
+## loading -----------------------------------------------------------
 
 def _checkrepetitions(stmdata_object):
 	coordlist = stmdata_object.spymdata.Current.attrs['RHK_SpecDrift_Xcoord']
@@ -1461,13 +1465,4 @@ def _add_image_metadata(stmdata_object):
 	stmdata_object.image.attrs['spectype'] = stmdata_object.spectype
 
 	return stmdata_object
-
-
-def load_rhksm4(filename):
-	"""Load the data from the .sm4 file using the old loader from spym"""
-	return rhksm4.load(filename)
-
-def load_spym(filename):
-	"""Load the data from the .sm4 file using spym"""
-	return load(filename)
 
