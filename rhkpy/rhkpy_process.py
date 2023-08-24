@@ -6,6 +6,7 @@ from scipy.signal import find_peaks
 from scipy.optimize import curve_fit
 from scipy import ndimage
 import hvplot.xarray
+import holoviews as hv
 
 ## internal functions
 
@@ -635,6 +636,94 @@ def genthumbs(folderpath = '', **kwargs):
 		data_plot = data.qplot()
 		data_plot.save(folderpath + fname[:-4] + '.png')
 
-def navigation(*args):
-	for a in args:
-		print(a)
+def navigation(*args, **kwargs):
+	# arguments should be rhkdata instances
+	# an optional argument is plot_spec. If False, the spectroscopy positions are not plotted
+	if 'plot_spec' not in kwargs:
+		plot_spec = True
+	else:
+		plot_spec = kwargs['plot_spec']
+
+	# we need a function to plot a bounding box around the topo data
+	def bounding_box(rhkdata_obj, c):
+		l_top = rhkdata_obj.image.topography.drop('scandir')[-1, :].hvplot.line(x = 'x', y = 'y', color = c, label = rhkdata_obj.image.attrs['filename'])
+		l_bottom = rhkdata_obj.image.topography.drop('scandir')[0, :].hvplot.line(x = 'x', y = 'y', color = c)
+		l_left = rhkdata_obj.image.topography.drop('scandir')[:, 0].hvplot.line(x = 'x', y = 'y', color = c)
+		l_right = rhkdata_obj.image.topography.drop('scandir')[:, -1].hvplot.line(x = 'x', y = 'y', color = c)
+		return l_bottom * l_left * l_right * l_top
+
+	def plot_spec_positions(rhkdata_obj):
+		if rhkdata_obj.datatype == 'map':
+			if rhkdata_obj.spectype == 'iv':
+				_ = rhkdata_obj.spectra.drop(['bias', 'repetitions', 'biasscandir']).drop_vars(['lia', 'current'])
+				specplot = _.hvplot.scatter(x = 'x', y = 'y', groupby = [], marker = 'x', label = 'spec pos: ' + rhkdata_obj.image.attrs['filename'])
+			elif rhkdata_obj.spectype == 'iz':
+				_ = rhkdata_obj.spectra.drop(['z', 'repetitions', 'zscandir']).drop_vars(['current'])
+				specplot = _.hvplot.scatter(x = 'x', y = 'y', groupby = [], marker = 'x', label = 'spec pos: ' + rhkdata_obj.image.attrs['filename'])
+		elif rhkdata_obj.datatype == 'line':
+			if rhkdata_obj.spectype == 'iv':
+				_ = rhkdata_obj.spectra.drop_vars(['lia', 'current']).drop(['biasscandir', 'repetitions', 'bias'])
+				specplot = _.hvplot.scatter(x = 'x', y = 'y', groupby = [], marker = 'x', label = 'spec pos: ' + rhkdata_obj.spectra.attrs['filename'])
+			elif rhkdata_obj.spectype == 'iz':
+				_ = rhkdata_obj.spectra.drop_vars(['current']).drop(['zscandir', 'repetitions', 'z'])
+				specplot = _.hvplot.scatter(x = 'x', y = 'y', groupby = [], marker = 'x', label = 'spec pos: ' + rhkdata_obj.spectra.attrs['filename'])
+		elif rhkdata_obj.datatype == 'spec':
+			specplot = rhkdata_obj.spectra.hvplot.scatter(x = 'x', y = 'y', groupby = [], marker = 'x', label = 'spec pos: ' + rhkdata_obj.spectra.attrs['filename'])
+		else:
+			# it should never get to this point
+			specplot = hv.Empty()
+		
+		return specplot
+
+	datatypes = []
+	spectypes = []
+	for stmdata in args:
+		datatypes += [stmdata.datatype]
+		spectypes += [stmdata.spectype]
+
+	# get the indices, where the datatype has an image or has spectroscopy data
+	indices_topo = []
+	indices_spec = []
+	for index, value in enumerate(datatypes):
+		if value in ('map', 'image'):
+			indices_topo += [index]
+		if value in ('map', 'line', 'spec'):
+			indices_spec += [index]
+	# indices_topo = [index for index, value in enumerate(datatypes) if value in ('map', 'image')]
+	print(datatypes, spectypes)
+	print(indices_topo, indices_spec)
+	
+	# plot those images
+	# get a color map for the bounding boxes
+	from bokeh.palettes import Category20
+	colors = Category20[20]
+
+	# do the first plot
+	if indices_topo != []:
+		# plot the first one
+		topo_abs = args[0].coord_to_absolute()
+		navi_plot = topo_abs._qplot_topo(cmap_topo = 'bone')
+		# draw a bounding box
+		navi_plot *= bounding_box(topo_abs, colors[0])
+		
+		colorindex = 1
+		for i in indices_topo[1:]:
+			topo_abs = args[i].coord_to_absolute()
+			navi_plot *= topo_abs._qplot_topo(cmap_topo = 'bone', clabel = 'height (nm)')
+			# plot a bounding box around the image
+			navi_plot *= bounding_box(topo_abs, colors[colorindex])
+			colorindex += 1
+		
+	# if plot_spec is True, plot the spectra positions
+	if plot_spec is True:
+		if indices_spec != []:
+			# plot the first one if no topography data was passed
+			if indices_topo == []:
+				navi_plot = plot_spec_positions(args[0])
+			else:
+				navi_plot *= plot_spec_positions(args[0])
+				# for datatypes containing a spectrum, plot the spectrum positions
+				for i in indices_spec[1:]:
+					navi_plot *= plot_spec_positions(args[i])
+
+	return navi_plot.opts(frame_width = 400, frame_height = 400, legend_position = 'right')

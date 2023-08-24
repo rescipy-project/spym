@@ -321,19 +321,8 @@ class rhkdata:
 		# hvplot.show(topoplot)
 		return final_plot
 
-
-def load_rhksm4(filename):
-	"""Load the data from the .sm4 file using the old loader from spym"""
-	return rhksm4.load(filename)
-
-
-def load_spym(filename):
-	"""Load the data from the .sm4 file using spym"""
-	return load(filename)
-
-
-## internal functions -----------------------------------------------------------------------------------------
-## plotting functions for qplot
+	## internal functions -----------------------------------------------------------------------------------------
+	## plotting functions for qplot
 
 	def _qplot_topo(self, cmap_topo = 'fire', **kwargs):
 		"""Plotting topography data using :py:mod:`hvplot`.
@@ -345,7 +334,7 @@ def load_spym(filename):
 		:rtype: :py:mod:`holoviews`
 		"""	
 		# The backward direction should be plotted, since this is the direction in which the tip moves, when the spectroscopy data is measured.
-		return self.image.topography[:, :, 1].hvplot.image(x = 'x', cmap = cmap_topo, title = 'topography backward')
+		return self.image.topography[:, :, 1].hvplot.image(x = 'x', y = 'y', cmap = cmap_topo, title = 'topography backward')
 
 	def _qplot_lia(self, cmap_spec = 'viridis', **kwargs):
 		"""Plotting dI/dV image data using :py:mod:`hvplot`.
@@ -553,6 +542,16 @@ def load_spym(filename):
 		return specplot_up*specplot_down
 
 
+def load_rhksm4(filename):
+	"""Load the data from the .sm4 file using the old loader from spym"""
+	return rhksm4.load(filename)
+
+
+def load_spym(filename):
+	"""Load the data from the .sm4 file using spym"""
+	return load(filename)
+
+## internal functions ------------------------------------------------
 ## loading -----------------------------------------------------------
 
 def _checkrepetitions(stmdata_object):
