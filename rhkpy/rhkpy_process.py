@@ -600,7 +600,7 @@ def genthumbs(folderpath = '', **kwargs):
 
 	.. note::
 
-		Remember. Possible options for ``folderpath`` are:
+		Possible options for ``folderpath`` are:
 		
 		- relative path: "./" means the current directory. "../" is one directory above the current one.
 		- absolute path: Can start with: "c:/users/averagejoe/data"
