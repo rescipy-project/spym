@@ -21,6 +21,6 @@ hvplot.extension('bokeh')
 from holoviews import opts
 opts.defaults(
     opts.Image(
-        aspect = 1
+        aspect = 'equal'
         )
     ) # can't set default colormap with this

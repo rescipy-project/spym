@@ -237,92 +237,48 @@ class rhkdata:
 
 		:param width: set size of plot, defaults to None
 		:type width: float, optional
-		:return: :py:mod:`holoviews` plot
-		:rtype: :py:mod:`holoviews`
-		"""	
+
+		The colorscales used for density plots can be specified by the keywords below.
+		For possible colorscale options see the `HoloViews colormaps <https://holoviews.org/user_guide/Colormaps.html>`_.
+
+		:param cmap_topo: topography colorscale, defaults to 'fire'
+		:type cmap_topo: str, optional
+		:param cmap_spec: colorscale for plotting dI/dV data, defaults to 'viridis'
+		:type cmap_spec: str, optional
+
+		:return: :py:mod:`panel` plot
+		:rtype: :py:mod:`panel`
+		"""			
 		if self.datatype == 'image':
-			topo_plot = self.image.topography[:, :, 1].hvplot.image(cmap = 'fire', x = 'x', y = 'y', title = 'topography backward')
-			lia_plot = self.image.lia[:, :, 1].hvplot.image(cmap = 'plasma', x = 'x', y = 'y', title = 'dI/dV backward')
-
+			topo_plot = self.qplot_topo(**kwargs)
+			lia_plot = self.qplot_lia(**kwargs)
 			final_plot = pn.Row(pn.panel(topo_plot), pn.panel(lia_plot))
-
-		# if the rhkdata instance is 'map'
 		elif self.datatype == 'map':
+			# if the rhkdata instance is 'map'
 			if self.spectype == 'iv':
-				# take the mean of the spectra in a point and plot it
-				meanmap = self.spectra.mean(dim = ['repetitions', 'biasscandir'])
-				# select the lia
-				specplot = meanmap.lia.hvplot.image(
-					x = 'specpos_x',
-					y = 'specpos_y',
-					groupby = 'bias',
-					cmap = 'viridis',
-					title = 'dI/dV map'
-				)
+				specplot = self.qplot_map_iv(**kwargs)
 			elif self.spectype == 'iz':
-				# take the mean of the spectra in a point and plot it
-				meanmap = self.spectra.mean(dim = ['repetitions', 'zscandir'])
-				specplot = meanmap.current.hvplot.image(
-					x = 'specpos_x',
-					y = 'specpos_y',
-					groupby = 'z',
-					cmap = 'viridis',
-					title = 'I(z) map'
-				)
+				specplot = self.qplot_map_iz(**kwargs)
 			# plot the topography
-			# The backward direction should be plotted, since this is the direction in which the tip moves, when the spectroscopy data is measured.
-			topoplot = self.image.topography[:, :, 1].hvplot.image(x = 'x', cmap = 'fire', title = 'topography backward')
+			topoplot = qplot_topo(self)
 
 			## adjust options
 			topoplot.opts(frame_width = width)
 			specplot.opts(frame_width = width)
-
 			# separate the plots and the widget into panels, so I can place the widget
 			topo_static = pn.panel(topoplot)
 			spec_dynamic = pn.panel(specplot)
-
 			# extract the widget
 			widget_panel = spec_dynamic[0]
 			specplot_static = spec_dynamic[1]
-
 			# combined plot
 			final_plot = pn.Row(topo_static, pn.Column(widget_panel, specplot_static))
-			## without using panel
-			# final_plot = hv.Layout([topoplot, specplot]).cols(2) # cols(2) to plot side by side
-			# adjust size
-			# final_plot.height = height
-
 		elif self.datatype == 'line':
 			if self.spectype == 'iv':
-				# take the mean of the spectra in a point and plot it
-				meanmap = self.spectra.mean(dim = ['repetitions', 'biasscandir'])
-				# select the lia
-				specplot = meanmap.lia.hvplot.image(
-					x = 'bias',
-					y = 'dist',
-					cmap = 'viridis',
-					title = 'dI/dV line spectra'
-				)
-
+				specplot = self.qplot_line_iv(**kwargs)
 				# plot a selected spectrum along the dist dimensions
-				# plot repetitions and biasscandir on the same plot
-				# do the first plot, if there are more than 1 repetitions, plot the average first
-				if len(self.spectra.repetitions) == 1:
-					lineplot_fw = self.spectra.lia[:, :, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
-					lineplot_bw = self.spectra.lia[:, :, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
-				elif len(self.spectra.repetitions) > 1:
-					lineplot_fw = self.spectra.lia[:, :, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					lineplot_bw = self.spectra.lia[:, :, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					for i in range(1, len(self.spectra.repetitions)):
-						# iterate through the repetitions and plot on the same plot
-						lineplot_fw *= self.spectra.lia[:, :, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-						lineplot_bw *= self.spectra.lia[:, :, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					lineplot_fw *= self.spectra.lia.mean(dim = 'repetitions')[:, :, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
-					lineplot_bw *= self.spectra.lia.mean(dim = 'repetitions')[:, :, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
+				combined = self.qplot_line_spec_iv(**kwargs)
 
-				# combine the fw and bw bias sweeps
-				combined = lineplot_fw * lineplot_bw
-				
 				# if width parameter is specified, set the size of the plots
 				if width is None:
 					twod_plot_panel = pn.panel(specplot)
@@ -330,43 +286,15 @@ class rhkdata:
 				else:
 					twod_plot_panel = pn.panel(specplot.opts(frame_width = int(0.8*width)))
 					combined_panel = pn.panel(combined.opts(frame_width = width))
-				
 				# separate the widget and plot into panels
 				plot_panel = combined_panel[0]
 				plot_widget = combined_panel[1]
-
 				# combined plot
 				final_plot = pn.Row(twod_plot_panel, pn.Column(plot_widget, plot_panel))
-
 			elif self.spectype == 'iz':
 				# take the mean of the spectra in a point and plot it
-				meanmap = self.spectra.mean(dim = ['repetitions', 'zscandir'])
-				# select the current
-				specplot = meanmap.current.hvplot.image(
-					x = 'z',
-					y = 'dist',
-					cmap = 'viridis',
-					title = 'I(z) line spectra'
-				)
-
-				# plot a selected spectrum along the dist dimensions
-				# plot repetitions and zscandir on the same plot
-				# if there are more repetitions, the first plot will be the average
-				if len(self.spectra.repetitions) == 1:
-					lineplot_fw = self.spectra.current[:, :, 0, 0].hvplot.line(x = 'z', color = 'red', label = 'up')
-					lineplot_bw = self.spectra.current[:, :, 0, 1].hvplot.line(x = 'z', color = 'blue', label = 'down')
-				elif len(self.spectra.repetitions) > 1:
-					lineplot_fw = self.spectra.current[:, :, 0, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					lineplot_bw = self.spectra.current[:, :, 0, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					for i in range(1, len(self.spectra.repetitions)):
-						# iterate through the repetitions and plot on the same plot
-						lineplot_fw *= self.spectra.current[:, :, i, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-						lineplot_bw *= self.spectra.current[:, :, i, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					lineplot_fw *= self.spectra.current.mean(dim = 'repetitions')[:, :, 0].hvplot.line(x = 'z', color = 'red', line_width = 2, label = 'avg up')
-					lineplot_bw *= self.spectra.current.mean(dim = 'repetitions')[:, :, 1].hvplot.line(x = 'z', color = 'blue', line_width = 2, label = 'avg down')
-
-				# combine the fw and bw z sweeps
-				combined = lineplot_fw * lineplot_bw
+				specplot = self.qplot_line_iz(**kwargs)
+				combined = self.qplot_line_spec_iz(**kwargs)
 				
 				# if width parameter is specified, set the size of the plots
 				if width is None:
@@ -385,58 +313,240 @@ class rhkdata:
 
 		elif self.datatype == 'spec':
 			if self.spectype == 'iv':
-				if len(self.spectra.repetitions) == 1:
-					liaplot_fw = self.spectra.lia[:, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
-					liaplot_bw = self.spectra.lia[:, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
-				elif len(self.spectra.repetitions) > 1:
-					liaplot_fw = self.spectra.lia[:, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					liaplot_bw = self.spectra.lia[:, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					for i in range(1, len(self.spectra.repetitions)):
-						# iterate through the repetitions and plot on the same plot
-						liaplot_fw *= self.spectra.lia[:, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-						liaplot_bw *= self.spectra.lia[:, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					liaplot_fw *= self.spectra.lia.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
-					liaplot_bw *= self.spectra.lia.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
+				leftpanel = self.qplot_spec_iv_lia(**kwargs)
+				rightpanel = self.qplot_spec_iv_curr(**kwargs)
 
-				# current
-				if len(self.spectra.repetitions) == 1:
-					currplot_fw = self.spectra.current[:, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
-					currplot_bw = self.spectra.current[:, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
-				elif len(self.spectra.repetitions) > 1:
-					currplot_fw = self.spectra.current[:, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					currplot_bw = self.spectra.current[:, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					for i in range(1, len(self.spectra.repetitions)):
-						# iterate through the repetitions and plot on the same plot
-						currplot_fw *= self.spectra.current[:, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-						currplot_bw *= self.spectra.current[:, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					currplot_fw *= self.spectra.current.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
-					currplot_bw *= self.spectra.current.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
-				
-				leftpanel = (liaplot_fw*liaplot_bw).opts(width = 400, title = 'dI/dV')
-				rightpanel = (currplot_fw*currplot_bw).opts(width = 400, title = 'current')
 				left_panel = pn.panel(leftpanel)
 				right_panel = pn.panel(rightpanel)
 				final_plot = pn.Row(left_panel, right_panel)
 			
 			elif self.spectype == 'iz':
-				if len(self.spectra.repetitions) == 1:
-					specplot_up = self.spectra.current[:, 0, 0].hvplot.line(x = 'z', color = 'red', label = 'up')
-					specplot_down = self.spectra.current[:, 0, 1].hvplot.line(x = 'z', color = 'blue', label = 'down')
-				elif len(self.spectra.repetitions) > 1:
-					specplot_up = self.spectra.current[:, 0, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					specplot_down = self.spectra.current[:, 0, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					for i in range(1, len(self.spectra.repetitions)):
-						# iterate through the repetitions and plot on the same plot
-						specplot_up *= self.spectra.current[:, i, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-						specplot_down *= self.spectra.current[:, i, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
-					specplot_up *= self.spectra.current.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'z', color = 'red', line_width = 2, label = 'avg up')
-					specplot_down *= self.spectra.current.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'z', color = 'blue', line_width = 2, label = 'avg down')
+				combined = self.qplot_spec_iz(**kwargs)
 				
-				final_plot = pn.panel((specplot_up*specplot_down).opts(width = 400, title = 'current'))
+				final_plot = pn.panel(combined.opts(width = 400, title = 'current'))
 
 		## This shows the plot in a separate window
 		# hvplot.show(topoplot)
 		return final_plot
+
+## plotting functions for qplot
+
+	def qplot_topo(self, cmap_topo = 'fire', **kwargs):
+		"""Plotting topography data using :py:mod:`hvplot`.
+
+		:param cmap_topo: colorscale used for topography data, defaults to 'fire'
+		:type cmap_topo: str, optional
+		
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		# The backward direction should be plotted, since this is the direction in which the tip moves, when the spectroscopy data is measured.
+		return self.image.topography[:, :, 1].hvplot.image(x = 'x', cmap = cmap_topo, title = 'topography backward')
+
+	def qplot_lia(self, cmap_spec = 'viridis', **kwargs):
+		"""Plotting dI/dV image data using :py:mod:`hvplot`.
+
+		:param cmap_spec: colorscale used for dI/dV data, defaults to 'viridis'
+		:type cmap_spec: str, optional
+		
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		return self.image.lia[:, :, 1].hvplot.image(cmap = cmap_spec, x = 'x', y = 'y', title = 'dI/dV backward')
+
+	def qplot_map_iv(self, cmap_spec = 'viridis', **kwargs):
+		"""Plotting dI/dV map data using :py:mod:`hvplot`.
+		The mean values (biasscandir and repetitions) of the dI/dV signal are plotted on the density plot.
+
+		:param cmap_spec: colorscale used for dI/dV data, defaults to 'viridis'
+		:type cmap_spec: str, optional
+		
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		# take the mean of the spectra in a point and plot it
+		meanmap = self.spectra.mean(dim = ['repetitions', 'biasscandir'])
+		# select the lia
+		specplot = meanmap.lia.hvplot.image(
+			x = 'specpos_x',
+			y = 'specpos_y',
+			groupby = 'bias',
+			cmap = cmap_spec,
+			title = 'dI/dV map'
+		)
+		# holoviews plot
+		return specplot
+	
+	def qplot_map_iz(self, cmap_spec = 'viridis', **kwargs):
+		"""Plotting I(z) map data using :py:mod:`hvplot`.
+
+		:param cmap_spec: colorscale used for I(z) data, defaults to 'viridis'
+		:type cmap_spec: str, optional
+		
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		# take the mean of the spectra in a point and plot it
+		meanmap = self.spectra.mean(dim = ['repetitions', 'zscandir'])
+		specplot = meanmap.current.hvplot.image(
+			x = 'specpos_x',
+			y = 'specpos_y',
+			groupby = 'z',
+			cmap = cmap_spec,
+			title = 'I(z) map'
+		)
+		return specplot
+
+	def qplot_line_iv(self, cmap_spec = 'viridis', **kwargs):
+		"""Plotting dI/dV line data on a density plot (bias vs distance), using :py:mod:`hvplot`.
+		The mean values of the dI/dV signal are plotted on the density plot.
+
+		:param cmap_spec: colorscale used for dI/dV data, defaults to 'viridis'
+		:type cmap_spec: str, optional
+		
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		# take the mean of the spectra in a point and plot it
+		meanmap = self.spectra.mean(dim = ['repetitions', 'biasscandir'])
+		# select the lia
+		specplot = meanmap.lia.hvplot.image(
+			x = 'bias',
+			y = 'dist',
+			cmap = cmap_spec,
+			title = 'dI/dV line spectra',
+			aspect = 1
+		)
+		return specplot
+
+	def qplot_line_spec_iv(self, **kwargs):
+		"""Plotting dI/dV spectra of a line spectroscopy instance, using :py:mod:`hvplot`.
+
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		# plot repetitions and biasscandir on the same plot
+		# do the first plot, if there are more than 1 repetitions, plot the average first
+		if len(self.spectra.repetitions) == 1:
+			lineplot_fw = self.spectra.lia[:, :, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
+			lineplot_bw = self.spectra.lia[:, :, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
+		elif len(self.spectra.repetitions) > 1:
+			lineplot_fw = self.spectra.lia[:, :, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			lineplot_bw = self.spectra.lia[:, :, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			for i in range(1, len(self.spectra.repetitions)):
+				# iterate through the repetitions and plot on the same plot
+				lineplot_fw *= self.spectra.lia[:, :, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+				lineplot_bw *= self.spectra.lia[:, :, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			lineplot_fw *= self.spectra.lia.mean(dim = 'repetitions')[:, :, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
+			lineplot_bw *= self.spectra.lia.mean(dim = 'repetitions')[:, :, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
+
+		# combine the fw and bw bias sweeps
+		return lineplot_fw * lineplot_bw
+
+	def qplot_line_iz(self, cmap_spec = 'viridis', **kwargs):
+		"""Plotting I(z) line data on a density plot (tip height vs distance), using :py:mod:`hvplot`.
+		The mean values of the I(z) signal are plotted.
+
+		:param cmap_spec: colorscale used for dI/dV data, defaults to 'viridis'
+		:type cmap_spec: str, optional
+		
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		meanmap = self.spectra.mean(dim = ['repetitions', 'zscandir'])
+		# select the current
+		specplot = meanmap.current.hvplot.image(
+			x = 'z',
+			y = 'dist',
+			cmap = cmap_spec,
+			title = 'I(z) line spectra',
+			aspect = 1
+		)
+		return specplot
+
+	def qplot_line_spec_iz(self, **kwargs):
+		"""Plotting I(z) spectra of a line spectroscopy instance, using :py:mod:`hvplot`.
+
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		# plot repetitions and zscandir on the same plot
+		# if there are more repetitions, the first plot will be the average
+		if len(self.spectra.repetitions) == 1:
+			lineplot_fw = self.spectra.current[:, :, 0, 0].hvplot.line(x = 'z', color = 'red', label = 'up')
+			lineplot_bw = self.spectra.current[:, :, 0, 1].hvplot.line(x = 'z', color = 'blue', label = 'down')
+		elif len(self.spectra.repetitions) > 1:
+			lineplot_fw = self.spectra.current[:, :, 0, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			lineplot_bw = self.spectra.current[:, :, 0, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			for i in range(1, len(self.spectra.repetitions)):
+				# iterate through the repetitions and plot on the same plot
+				lineplot_fw *= self.spectra.current[:, :, i, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+				lineplot_bw *= self.spectra.current[:, :, i, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			lineplot_fw *= self.spectra.current.mean(dim = 'repetitions')[:, :, 0].hvplot.line(x = 'z', color = 'red', line_width = 2, label = 'avg up')
+			lineplot_bw *= self.spectra.current.mean(dim = 'repetitions')[:, :, 1].hvplot.line(x = 'z', color = 'blue', line_width = 2, label = 'avg down')
+
+		# combine the fw and bw z sweeps
+		return lineplot_fw * lineplot_bw
+
+	def qplot_spec_iv_lia(self, **kwargs):
+		"""Plotting the dI/dV signal of a single spectrum instance, using :py:mod:`hvplot`.
+
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		if len(self.spectra.repetitions) == 1:
+			liaplot_fw = self.spectra.lia[:, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
+			liaplot_bw = self.spectra.lia[:, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
+		elif len(self.spectra.repetitions) > 1:
+			liaplot_fw = self.spectra.lia[:, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			liaplot_bw = self.spectra.lia[:, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			for i in range(1, len(self.spectra.repetitions)):
+				# iterate through the repetitions and plot on the same plot
+				liaplot_fw *= self.spectra.lia[:, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+				liaplot_bw *= self.spectra.lia[:, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			liaplot_fw *= self.spectra.lia.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
+			liaplot_bw *= self.spectra.lia.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
+		return (liaplot_fw*liaplot_bw).opts(width = 400, title = 'dI/dV')
+
+	def qplot_spec_iv_curr(self, **kwargs):
+		"""Plotting the current signal of a single spectrum instance, using :py:mod:`hvplot`.
+
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		if len(self.spectra.repetitions) == 1:
+			currplot_fw = self.spectra.current[:, 0, 0].hvplot.line(x = 'bias', color = 'red', label = 'left')
+			currplot_bw = self.spectra.current[:, 0, 1].hvplot.line(x = 'bias', color = 'blue', label = 'right')
+		elif len(self.spectra.repetitions) > 1:
+			currplot_fw = self.spectra.current[:, 0, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			currplot_bw = self.spectra.current[:, 0, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			for i in range(1, len(self.spectra.repetitions)):
+				# iterate through the repetitions and plot on the same plot
+				currplot_fw *= self.spectra.current[:, i, 0].hvplot.line(x = 'bias', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+				currplot_bw *= self.spectra.current[:, i, 1].hvplot.line(x = 'bias', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			currplot_fw *= self.spectra.current.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'bias', color = 'red', line_width = 2, label = 'avg left')
+			currplot_bw *= self.spectra.current.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'bias', color = 'blue', line_width = 2, label = 'avg right')
+		return (currplot_fw*currplot_bw).opts(width = 400, title = 'current')
+
+	def qplot_spec_iz(self, **kwargs):
+		"""Plotting an I(z) single spectrum instance, using :py:mod:`hvplot`.
+
+		:return: :py:mod:`holoviews` plot
+		:rtype: :py:mod:`holoviews`
+		"""	
+		if len(self.spectra.repetitions) == 1:
+			specplot_up = self.spectra.current[:, 0, 0].hvplot.line(x = 'z', color = 'red', label = 'up')
+			specplot_down = self.spectra.current[:, 0, 1].hvplot.line(x = 'z', color = 'blue', label = 'down')
+		elif len(self.spectra.repetitions) > 1:
+			specplot_up = self.spectra.current[:, 0, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			specplot_down = self.spectra.current[:, 0, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			for i in range(1, len(self.spectra.repetitions)):
+				# iterate through the repetitions and plot on the same plot
+				specplot_up *= self.spectra.current[:, i, 0].hvplot.line(x = 'z', color = 'LightCoral', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+				specplot_down *= self.spectra.current[:, i, 1].hvplot.line(x = 'z', color = 'LightSkyBlue', line_dash = 'dotted', line_width = 0.5, alpha = 1)
+			specplot_up *= self.spectra.current.mean(dim = 'repetitions')[:, 0].hvplot.line(x = 'z', color = 'red', line_width = 2, label = 'avg up')
+			specplot_down *= self.spectra.current.mean(dim = 'repetitions')[:, 1].hvplot.line(x = 'z', color = 'blue', line_width = 2, label = 'avg down')
+		return specplot_up*specplot_down
 
 
 ### internal functions -----------------------------------------------------------

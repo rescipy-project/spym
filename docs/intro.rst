@@ -4,6 +4,8 @@ Introduction
 A python package for processing Scanning Tunneling Microscopy (STM) data from RHK, based on the `spym project <https://github.com/rescipy-project/spym>`_.
 Source is available from `GitHub <https://github.com/zrbyte/rhkpy/>`_.
 
+To make the most of rhkpy, also consult the `xarray documentation <https://xarray-test.readthedocs.io/en/latest/data-structures.html>`_ and check out `plotting examples <https://holoviews.org/reference/index.html>`_, with HoloViews. The HoloViews website has `examples <https://holoviews.org/user_guide/Plotting_with_Bokeh.html>`_ on how to customize plots, as well as tutorial notebooks.
+
 
 Known issues
 ------------
@@ -24,6 +26,24 @@ Installation
 .. code-block::
 
 	pip install rhkpy
+
+	# to upgrade to a new version, use
+	pip install --upgrade rhkpy
+
+Specific example on a Windows machine
+-------------------------------------
+
+- `Download <https://winpython.github.io>`_ WinPython (3.xx), from GitHub or Sourceforge.
+- After installing, in the WinPython directory, start the WindowsPowerShell.exe. Here you can run the "pip" commands.
+- Start the "Jupyter Lab.exe" to run Jupyter notebooks.
+
+Setting the notebook directory on Windows
+-----------------------------------------
+
+- In PowerShell, run this command to generate a Jupyter config file: "jupyter notebook --generate-config"
+- The config file will be located in the sub-directory of WinPython: "python-3.xx.x.amd64/etc/jupyter"
+- In the config file look for the option: "c.NotebookApp.notebook_dir"
+- Change this to the desired directory.
 
 
 Examples
