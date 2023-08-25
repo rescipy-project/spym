@@ -676,6 +676,8 @@ def navigation(*args, **kwargs):
 
 		Arguments are plotted in the order they are passed to :func:`navigation`.
 
+		The spectroscopy positions in dI/dV maps can be simply visualized by just passing the map :class:`~rhkpy.rhkpy_loader.rhkdata` instance.
+
 	"""	
 	# arguments should be rhkdata instances
 	# take care of optional keyword arguments
