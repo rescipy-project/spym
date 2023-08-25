@@ -34,11 +34,13 @@ Specific example on a Windows machine
 -------------------------------------
 
 - `Download <https://winpython.github.io>`_ WinPython (3.xx), from GitHub or Sourceforge.
-- After installing, in the WinPython directory, start the WindowsPowerShell.exe. Here you can run the "pip" commands.
+- After installing, in the WinPython directory, start the WindowsPowerShell.exe. Here you can run the "pip" commands, to install rhkpy. 
 - Start the "Jupyter Lab.exe" to run Jupyter notebooks.
 
 Setting the notebook directory on Windows
 -----------------------------------------
+
+You may wish to change the default directory holding the Jupyter notebook files. You can do this by the following steps. 
 
 - In PowerShell, run this command to generate a Jupyter config file: "jupyter notebook --generate-config"
 - The config file will be located in the sub-directory of WinPython: "python-3.xx.x.amd64/etc/jupyter"
@@ -49,7 +51,7 @@ Setting the notebook directory on Windows
 Examples
 =============
 
-Take a look at the ``tutorial.ipynb`` Jupyter notebook in the `GitHub repository <https://github.com/zrbyte/rhkpy/>`_.
+Take a look at the ``demo.ipynb`` and ``tutorial.ipynb`` Jupyter notebooks in the `GitHub repository <https://github.com/zrbyte/rhkpy/>`_.
 
 Below is a simple example.
 
