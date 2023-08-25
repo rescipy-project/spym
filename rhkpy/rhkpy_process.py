@@ -725,8 +725,11 @@ def navigation(*args, **kwargs):
 		else:
 			# it should never get to this point
 			specplot = hv.Empty()
-		
 		return specplot
+
+	if len(args) == 0:
+		print('Please supply some rhkdata instances to plot.')
+		return
 
 	datatypes = []
 	spectypes = []
@@ -777,4 +780,4 @@ def navigation(*args, **kwargs):
 			for i in indices_spec[1:]:
 				navi_plot *= plot_spec_positions(args[i], next(color_cycle))
 
-	return navi_plot.opts(frame_width = 400, frame_height = 400, legend_position = 'right')
+	return navi_plot.opts(frame_width = 400, frame_height = 400, legend_position = 'right', title = ' ')
