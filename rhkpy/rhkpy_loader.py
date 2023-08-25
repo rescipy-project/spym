@@ -144,6 +144,37 @@ class rhkdata:
 		elif self.datatype == 'image':
 			self = _load_image(self)
 
+	def mrep(self):
+		"""Returns a new instance of :class:`rhkdata`, with the data averaged (using :py:mod:`xarray.Variable.mean`) along the 'repetitions' coordinate.
+		Meant to be shorthand for: ``rhkdata_instance.spectra.mean(dim = 'repetitions')``.
+
+		:return: :class:`rhkdata` instance
+		:rtype: :class:`rhkdata`
+		"""		
+		# function to take the mean along the repetitions coordinate
+		if self.datatype == 'image':
+			print('Can\'t drop the repetitions from an image.')
+		newdata = copy.deepcopy(self)
+		newdata.spectra = newdata.spectra.mean(dim = 'repetitions')
+		return newdata
+
+	def msw(self):
+		"""Returns a new instance of :class:`rhkdata`, with the data averaged (using :py:mod:`xarray.Variable.mean`) along the 'biasscandir' or 'zscandir' coordinate.
+		Meant to be shorthand for: ``rhkdata_instance.spectra.mean(dim = 'biasscandir')``, or ``rhkdata_instance.spectra.mean(dim = 'zscandir')``.
+
+		:return: :class:`rhkdata` instance
+		:rtype: :class:`rhkdata`
+		"""		
+		# function to take the mean along the biasscan coordinate
+		if self.datatype == 'image':
+			print('Can\'t drop the repetitions from an image.')
+		newdata = copy.deepcopy(self)
+		if self.spectype == 'iv':
+			newdata.spectra = newdata.spectra.mean(dim = 'biasscandir')
+		elif self.spectype == 'iz':
+			newdata.spectra = newdata.spectra.mean(dim = 'zscandir')
+		return newdata
+
 	def print_info(self):
 		"""List the variables of the :class:`rhkdata` instance.
 		"""
