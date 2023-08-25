@@ -784,3 +784,49 @@ def navigation(*args, **kwargs):
 
 	return navi_plot.opts(frame_width = 400, frame_height = 400, legend_position = 'right', title = ' ')
 
+
+def mapsection(specmap, start_point, end_point):
+	"""Make a section across a dI/dV spectroscopy map: ``specmap``, from ``start_point`` to ``end_point``.
+
+	:param specmap: _description_
+	:type specmap: _type_
+	:param start_point: _description_
+	:type start_point: _type_
+	:param end_point: _description_
+	:type end_point: _type_
+	:return: _description_
+	:rtype: _type_
+	"""	
+	# Extract the start and end coordinates
+	x_start, y_start = start_point
+	x_end, y_end = end_point
+	
+	# Get the pixel resolution needed for the section.
+	pixelsize = np.abs(specmap.specpos_x[1] - specmap.specpos_x[0]).data
+	dist_length = np.sqrt((x_end - x_start)**2 + (y_end - y_start)**2)
+
+	# Define the line coordinates
+	line_x_coords = xr.DataArray(np.linspace(x_start, x_end, int(dist_length / pixelsize) + 1), dims = 'dist')
+	line_y_coords = xr.DataArray(np.linspace(y_start, y_end, int(dist_length / pixelsize) + 1), dims = 'dist')
+
+	# Dictionary to store the sections for each variable
+	sections_dict = {}
+
+	# Loop through the variables in the dataset
+	for var_name, var_data in specmap.data_vars.items():
+	    # Interpolate along the specified line
+	    interpolated_values = var_data.interp(specpos_x = line_x_coords, specpos_y = line_y_coords)
+	    # Store the interpolated values in the dictionary
+	    sections_dict[var_name] = interpolated_values
+	
+	# Create a new xarray Dataset containing the sections
+	# new distance dimension coordinates
+	dist = np.sqrt((line_x_coords.data - line_x_coords.data[0]) ** 2 + (line_y_coords.data - line_y_coords.data[0]) ** 2)
+	
+	sections_dataset = xr.Dataset(sections_dict)
+	# drop the unused coordinates
+	sections_dataset = sections_dataset.drop_vars(['specpos_x', 'specpos_y'])
+	# assign the dist coordinate
+	sections_dataset = sections_dataset.assign_coords(dist = dist)
+	
+	return sections_dataset
