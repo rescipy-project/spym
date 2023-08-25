@@ -4,7 +4,7 @@ Introduction
 A python package for processing Scanning Tunneling Microscopy (STM) data from RHK, based on the `spym project <https://github.com/rescipy-project/spym>`_.
 Source is available from `GitHub <https://github.com/zrbyte/rhkpy/>`_.
 
-To make the most of rhkpy, also consult the `xarray documentation <https://xarray-test.readthedocs.io/en/latest/data-structures.html>`_ and check out `plotting examples <https://holoviews.org/reference/index.html>`_, with HoloViews. The HoloViews website has `examples <https://holoviews.org/user_guide/Plotting_with_Bokeh.html>`_ on how to customize plots, as well as tutorial notebooks.
+To make the most of rhkpy, also consult the `xarray documentation <https://docs.xarray.dev/en/latest/index.html>`_ and check out `plotting examples <https://holoviews.org/reference/index.html>`_, with HoloViews. The HoloViews website has `examples <https://holoviews.org/user_guide/Plotting_with_Bokeh.html>`_ on how to customize plots, as well as tutorial notebooks.
 
 
 Known issues

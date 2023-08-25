@@ -173,7 +173,7 @@ def coord_to_absolute(xrobj):
 	return xrobj_abscoord
 
 
-def gaussian(x, x0 = 0, ampl = 2, width = 0.1, offset = 0):
+def gaussian(x, x0 = 0, ampl = 2, width = 0.05, offset = 0):
 	"""Gaussian function. Width and amplitude parameters have the same meaning as for :func:`lorentz`.
 
 	:param x: values for the x coordinate
@@ -194,7 +194,7 @@ def gaussian(x, x0 = 0, ampl = 2, width = 0.1, offset = 0):
 	return offset + ampl * np.exp(-2*np.log(2)*(x - x0)**2 / (width**2))
 
 
-def lorentz(x, x0 = 0, ampl = 2, width = 0.1, offset = 0):
+def lorentz(x, x0 = 0, ampl = 2, width = 0.05, offset = 0):
 	"""Single Lorentz function
 
 	:param x: values for the x coordinate
@@ -222,7 +222,7 @@ def lorentz(x, x0 = 0, ampl = 2, width = 0.1, offset = 0):
 	area = np.pi * ampl * width / 2
 	return offset + (2/np.pi) * (area * width) / (4*(x - x0)**2 + width**2)
 
-def gaussian2(x, x01 = -5, ampl1 = 1, width1 = 0.1, x02 = 5, ampl2 = 1, width2 = 0.1, offset = 0):
+def gaussian2(x, x01 = -5, ampl1 = 1, width1 = 0.05, x02 = 5, ampl2 = 1, width2 = 0.05, offset = 0):
 	"""Double Gaussian function
 
 	:param x: values for the x coordinate
@@ -783,3 +783,4 @@ def navigation(*args, **kwargs):
 				navi_plot *= plot_spec_positions(args[i], next(color_cycle))
 
 	return navi_plot.opts(frame_width = 400, frame_height = 400, legend_position = 'right', title = ' ')
+
