@@ -410,7 +410,9 @@ def bgsubtract(x_data, y_data, polyorder = 1, toplot = False, fitmask = None, hm
 	return y_data_nobg, bg_values, coeff, params_used_at_run, mask, covar
 
 def peakfit(xrobj, func = gaussian, fitresult = None, stval = None, bounds = None, toplot = False, pos_x = None, pos_y = None, **kwargs):
-	"""Fitting a function to peaks in the data contained in ``xrobj``.
+	"""Fitting a function to peaks in the data contained in the ``xrobj`` DataArray.
+	Currently, Datasets with multiple DataArrays is not supported.
+	Peak fitting is always assumed to be along the `bias` coordinate.
 
 	:param xrobj: :py:mod:`xarray` DataArray, of a single spectrum or a map.
 	:type xrobj: :py:mod:`xarray`
