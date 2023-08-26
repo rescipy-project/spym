@@ -786,16 +786,18 @@ def navigation(*args, **kwargs):
 
 
 def mapsection(specmap, start_point, end_point):
-	"""Make a section across a dI/dV spectroscopy map: ``specmap``, from ``start_point`` to ``end_point``.
+	"""Makes a section across a dI/dV spectroscopy map: ``specmap``. Starting and end points: ``start_point`` to ``end_point``.
+	It uses :py:mod:`xarray.Dataset.interp` to interpolate between data values.
 
-	:param specmap: _description_
-	:type specmap: _type_
-	:param start_point: _description_
-	:type start_point: _type_
-	:param end_point: _description_
-	:type end_point: _type_
-	:return: _description_
-	:rtype: _type_
+	:param specmap: the `spectra` :py:mod:`xarray` variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` instance. Found under: :class:`~rhkpy.rhkpy_loader.rhkdata.spectra`.
+	:type specmap: :py:mod:`xarray` DataSet
+	:param start_point: starting point for the line section. In the format: `(x, y)`, found in the ``specpos_x``, ``specpos_y`` coordinates of ``specmap``.
+	:type start_point: tuple: (float, float)
+	:param end_point: end point for the line section. In the format: `(x, y)`, found in the ``specpos_x``, ``specpos_y`` coordinates of ``specmap``.
+	:type end_point: tuple: (float, float)
+	
+	:return: :py:mod:`xarray` DataSet of the line section
+	:rtype: :py:mod:`xarray` DataSet
 	"""	
 	# Extract the start and end coordinates
 	x_start, y_start = start_point
@@ -814,10 +816,10 @@ def mapsection(specmap, start_point, end_point):
 
 	# Loop through the variables in the dataset
 	for var_name, var_data in specmap.data_vars.items():
-	    # Interpolate along the specified line
-	    interpolated_values = var_data.interp(specpos_x = line_x_coords, specpos_y = line_y_coords)
-	    # Store the interpolated values in the dictionary
-	    sections_dict[var_name] = interpolated_values
+		# Interpolate along the specified line
+		interpolated_values = var_data.interp(specpos_x = line_x_coords, specpos_y = line_y_coords)
+		# Store the interpolated values in the dictionary
+		sections_dict[var_name] = interpolated_values
 	
 	# Create a new xarray Dataset containing the sections
 	# new distance dimension coordinates
