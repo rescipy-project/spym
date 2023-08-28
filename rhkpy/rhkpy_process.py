@@ -791,7 +791,7 @@ def mapsection(specmap, start_point, end_point):
 	"""Makes a section across a dI/dV spectroscopy map: ``specmap``. Starting and end points: ``start_point`` to ``end_point``.
 	It uses :py:mod:`xarray.Dataset.interp` to interpolate between data values.
 
-	:param specmap: the `spectra` :py:mod:`xarray` variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` instance. Found under: :class:`~rhkpy.rhkpy_loader.rhkdata.spectra`.
+	:param specmap: the `spectra` :py:mod:`xarray` variable of an :class:`~rhkpy.rhkpy_loader.rhkdata` instance. Found under: :class:`rhkpy.rhkpy_loader.rhkdata.spectra`.
 	:type specmap: :py:mod:`xarray` DataSet
 	:param start_point: starting point for the line section. In the format: `(x, y)`, found in the ``specpos_x``, ``specpos_y`` coordinates of ``specmap``.
 	:type start_point: tuple: (float, float)
