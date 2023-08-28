@@ -1,0 +1,3 @@
+import rhkpy
+
+rhkpy.genthumbs()
