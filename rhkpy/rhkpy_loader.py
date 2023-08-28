@@ -153,7 +153,8 @@ class rhkdata:
 		"""		
 		# function to take the mean along the repetitions coordinate
 		if self.datatype == 'image':
-			print('Can\'t drop the repetitions from an image.')
+			print('Can\'t calculate the repetitions of an image.')
+			return
 		newdata = copy.deepcopy(self)
 		newdata.spectra = newdata.spectra.mean(dim = 'repetitions')
 		return newdata
@@ -167,7 +168,8 @@ class rhkdata:
 		"""		
 		# function to take the mean along the biasscan coordinate
 		if self.datatype == 'image':
-			print('Can\'t drop the repetitions from an image.')
+			print('Can\'t calculate the repetitions of an image.')
+			return
 		newdata = copy.deepcopy(self)
 		if self.spectype == 'iv':
 			newdata.spectra = newdata.spectra.mean(dim = 'biasscandir')
@@ -188,9 +190,9 @@ class rhkdata:
 			print('\nspectra:')
 			for item in self.spectra.data_vars:
 				print('\t', item)
-		print('\nspymdata:')
-		for item in self.spymdata:
-			print('\t', item)
+		# print('\nspymdata:')
+		# for item in self.spymdata:
+		# 	print('\t', item)
 
 
 	def coord_to_absolute(self):
