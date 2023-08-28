@@ -8,11 +8,13 @@ from holoviews import dim, opts
 import logging
 from bokeh.util import logconfig
 # Suppress Bokeh's warnings
-logconfig.basicConfig(level=logging.ERROR)
+logconfig.basicConfig(level = logging.ERROR)
 
 import warnings
 # suppress holoviews warnings
 warnings.filterwarnings('ignore', category = UserWarning, module = 'holoviews.plotting.bokeh.plot')
+# Suppress warnings from param
+warnings.filterwarnings('ignore', category = Parameterized.warning)
 
 # select bokeh
 hvplot.extension('bokeh')
