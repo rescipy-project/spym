@@ -153,7 +153,7 @@ class rhkdata:
 		"""		
 		# function to take the mean along the repetitions coordinate
 		if self.datatype == 'image':
-			print('Can\'t calculate the repetitions of an image.')
+			print('An image instance doesn\'t have repetitions.')
 			return
 		newdata = copy.deepcopy(self)
 		newdata.spectra = newdata.spectra.mean(dim = 'repetitions')
@@ -168,7 +168,7 @@ class rhkdata:
 		"""		
 		# function to take the mean along the biasscan coordinate
 		if self.datatype == 'image':
-			print('Can\'t calculate the repetitions of an image.')
+			print('An image instance doesn\'t have biasscandir or zscandir.')
 			return
 		newdata = copy.deepcopy(self)
 		if self.spectype == 'iv':
