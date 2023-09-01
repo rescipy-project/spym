@@ -10,7 +10,7 @@ To make the most of rhkpy, also consult the `xarray documentation <https://docs.
 Known issues
 ------------
 
-- For line spectra, topography (and probably all the other data) is loaded in the incorrect order. The topography data of line spectra should not be used at the moment.
+- For line spectra, topography is loaded in the incorrect order. The topography data of line spectra should not be used at the moment.
 - The method: `coord_to_absolute()` doesn't work for the image part of line spectra.
 - For the older version (`RHK_MinorVer = 5`) of the RHK software, the I(z) spectra seem to have the wrong `RHK_LineTypeName` field value. They show up as dI/dV spectra.
 
