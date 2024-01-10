@@ -191,7 +191,7 @@ def gaussian(x, x0 = 0, ampl = 2, width = 0.05, offset = 0):
 	:rtype: float, :py:mod:`numpy` array, etc.
 	"""	
 	# using the FWHM for the width
-	return offset + ampl * np.exp(-2*np.log(2)*(x - x0)**2 / (width**2))
+	return offset + ampl * np.exp(-4*np.log(2)*(x - x0)**2 / (width**2))
 
 
 def lorentz(x, x0 = 0, ampl = 2, width = 0.05, offset = 0):
@@ -245,7 +245,7 @@ def gaussian2(x, x01 = -5, ampl1 = 1, width1 = 0.05, x02 = 5, ampl2 = 1, width2 
 	:return: values of a double Gaussian function
 	:rtype: float, :py:mod:`numpy` array, etc.
 	"""
-	return offset + ampl1 * np.exp(-2*np.log(2)*(x - x01)**2 / (width1**2)) + ampl2 * np.exp(-2*np.log(2)*(x - x02)**2 / (width2**2))
+	return offset + ampl1 * np.exp(-4*np.log(2)*(x - x01)**2 / (width1**2)) + ampl2 * np.exp(-4*np.log(2)*(x - x02)**2 / (width2**2))
 
 def polynomial_fit(order, x_data, y_data):
 	"""Polinomial fit to `x_data`, `y_data`
