@@ -614,7 +614,7 @@ class RHKObjectContainer:
             PRMdata = np.fromfile(self._sm4._file, dtype=np.uint32, count=self._PRM_DataSize)
         elif self._PRM_CompressionFlag == 1:
             comprPRMdata = np.fromfile(self._sm4._file, dtype=np.uint32, count=self._PRM_CompressionSize)
-            PRMdata = zlib.decompress(comprPRMdata, wbits=0, bufsize=self._PRM_DataSize)
+            PRMdata = zlib.decompressobj(wbits=0).decompress(comprPRMdata,self._PRM_DataSize)
 
         self.attrs['RHK_PRMdata'] = PRMdata.decode('CP437')
 
