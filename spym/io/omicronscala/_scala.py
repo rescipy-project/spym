@@ -245,5 +245,5 @@ class OMICRONchannel:
         xres = self.attrs['IncrementX']
         ysize = self.attrs['ImageSizeinY']
         yres = self.attrs['IncrementY']
-        self.coords = [('y', yres * np.arange(ysize, dtype=np.float)),
-                       ('x', xres * np.arange(xsize, dtype=np.float))]
+        self.coords = [('y', yres * np.arange(ysize, dtype=np.float64)),
+                       ('x', xres * np.arange(xsize, dtype=np.float64))]
