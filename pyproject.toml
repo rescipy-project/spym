@@ -1,0 +1,35 @@
+[build-system]
+requires = [
+    "setuptools >= 64",
+    "xarray",
+    "scipy",
+    "matplotlib",
+    "hvplot",
+    ]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "spym"
+dynamic = ["version"]
+authors = [
+  { name="Mirco Panighel", email="mirkopanighel@gmail.com" },
+]
+description = "A python package for loading and processing Scanning Probe Microscopy (SPM) data."
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Natural Language :: English",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/rescipy-project/spym"
+Issues = "https://github.com/rescipy-project/spym/issues"
+
+[tool.setuptools.dynamic]
+version = {attr = "spym.__version__"}
