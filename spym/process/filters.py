@@ -202,7 +202,7 @@ def destripe(image,
     mask = ndimage.binary_opening(m_soft+m_hard, structure=np.ones((1,min_length), dtype=bool))
 
     # Filter masked values
-    image_masked = np.ma.array(image, mask = mask, fill_value=np.NaN)
+    image_masked = np.ma.array(image, mask = mask, fill_value=np.nan)
     filt = ndimage.uniform_filter(image_masked.data, size=(3, 1))
 
     filtered = image*np.invert(mask) + filt*mask
